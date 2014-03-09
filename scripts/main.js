@@ -10,6 +10,17 @@ function MainCtrl($scope, $timeout) {
     var onFrequency = 1200; // MARK
     var offFrequency = 2400; // SPACE
 
+    // TODO <<< need to pick a buffer size. This is a tradeoff
+    // between latency and dropping information. Maybe webworkers
+    // would let us turn this size down.
+    var bufferSize = 8192;
+
+    // At something like 1200 baud (bits per second), we don't want to fire
+    // an update of the screen 1200 times a second. Instead, we defer
+    // updating by storing them up in the pendingBitPusher array, and
+    // only periodically flushing them to the angular-ed $scope.receivedBits.
+    var MAX_SCREEN_UPDATE_RATE = 10; // updates per second
+
     function encode(message) {
         var bitstream = message.split("").map(function(ch) {
             return (0x100 | ch.charCodeAt(0)).toString(2).substring(1);
@@ -58,11 +69,6 @@ function MainCtrl($scope, $timeout) {
     $scope.receivedMessage = function() {
         return decode($scope.receivedBits);
     };
-    // At something like 1200 baud (bits per second), we don't want to fire
-    // an update of the screen 1200 times a second. Instead, we defer
-    // updating by storing them up in the pendingBitPusher array, and
-    // only periodically flushing them to the angular-ed $scope.receivedBits.
-    var MAX_SCREEN_UPDATE_RATE = 10; // updates per second
     var pendingBitPusher = null;
     var batchedBits = [];
     function bitPusher() {
@@ -110,10 +116,6 @@ function MainCtrl($scope, $timeout) {
         signalNode.start(0);
     };
 
-    // TODO <<< need to pick a buffer size. This is a tradeoff
-    // between latency and dropping information. Maybe webworkers
-    // would let us turn this size down.
-    var bufferSize = 1024;
     var processSignalNode = audioContext.createScriptProcessor(bufferSize, 1, 1);
     // Leak this node so the browser won't clean it up. Gross.
     window.processSignalNode = processSignalNode;
