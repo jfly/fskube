@@ -91,12 +91,12 @@ Modem.prototype._addFrequencySeen = function(frequency) {
         this._lastFrequencySeen = frequency;
         this._lastFrequencySeenCount = 0;
     }
+    var secondsPerPeriod = 1.0 / this._lastFrequencySeen;
+    var periodsPerBit = this._secondsPerBit / secondsPerPeriod;
+    var halfPeriodsPerBit = Math.round(2 * periodsPerBit);
     if(frequency == this._lastFrequencySeen) {
         this._lastFrequencySeenCount++;
         //console.log("Saw frequency " + frequency + "hZ this many times so far: " + this._lastFrequencySeenCount);//<<<
-        var secondsPerPeriod = 1.0 / this._lastFrequencySeen;
-        var periodsPerBit = this._secondsPerBit / secondsPerPeriod;
-        var halfPeriodsPerBit = Math.round(2 * periodsPerBit);
         if(this._lastFrequencySeenCount >= halfPeriodsPerBit) {
             var bit = this.frequencyToBit(this._lastFrequencySeen);
             this.fireBit(bit);
@@ -107,10 +107,22 @@ Modem.prototype._addFrequencySeen = function(frequency) {
         // seen count to 1. This may mean throwing out data from an
         // incomplete previous frequency, log a message in that case.
         if(this._lastFrequencySeenCount > 0) {
-            console.log("Throwing away the " + this._lastFrequencySeenCount + " occurrences of " + this._lastFrequencySeen + "hZ");
+            //<<< TODO - comment on this
+            if(this._lastFrequencySeenCount >= halfPeriodsPerBit/2) {
+                var bit = this.frequencyToBit(this._lastFrequencySeen);
+                //console.log("Dumping a bit " + bit + " here");//<<<
+                this.fireBit(bit);
+            }
+            //<<<
+            //console.log("Throwing away the " + this._lastFrequencySeenCount + " occurrences of " + this._lastFrequencySeen + "hZ halfPeriodsPerBit: " + halfPeriodsPerBit);
+            //<<< This is the guy that confused us, just let him go
+            this._lastFrequencySeen = frequency;
+            this._lastFrequencySeenCount = 0;
+            //<<<
+        } else {
+            this._lastFrequencySeen = frequency;
+            this._lastFrequencySeenCount = 1;
         }
-        this._lastFrequencySeen = frequency;
-        this._lastFrequencySeenCount = 1;
     }
 };
 

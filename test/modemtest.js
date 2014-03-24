@@ -3,12 +3,13 @@ var path = require('path');
 var assert = require('assert');
 
 var Modem = require("../scripts/modem");
+var readpcm = require("../scripts/readpcm");
 
 // DS8500 HART modem
 // http://datasheets.maximintegrated.com/en/ds/DS8500.pdf
 var bitsPerSecond = 1200;
 var onFrequency = 1200; // MARK
-var offFrequency = 2400; // SPACE
+var offFrequency = 2200; // SPACE
 
 var outBits = [];
 var correctBits = null;
@@ -49,12 +50,14 @@ function roundTripTest(modem, inBits) {
 
 var inBits = [0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1];
 
+/*<<<
 [ 16000, 44100 ].forEach(function(samplesPerSecond) {
     console.log("**** Round trip test @ " + samplesPerSecond + "hZ ****");
     var modem = new Modem(samplesPerSecond, bitsPerSecond, onFrequency, offFrequency);
     modem.addBitListener(bitListener);
     roundTripTest(modem, inBits);
 });
+*/
 
 
 
@@ -63,7 +66,25 @@ var tests = fs.readdirSync(__dirname);
 tests = tests.filter(function(filename) {
     return filename.match(/\.testdata$/);
 });
-    
+
+/*<<<
+outBits.length = 0;
+correctBits = null;//<<<
+var modem = new Modem(44100, bitsPerSecond, onFrequency, offFrequency);
+modem.addBitListener(bitListener);
+readpcm.getPcmData('test/0.00_gerty_fsk.wav',
+    function(value, channel) {
+        if(channel === 0) {
+            modem.demodulate(value);
+        }
+    },
+    function() {
+        console.log(outBits.toString());//<<<
+    });
+*/
+
+
+
 tests.forEach(function(filename) {
     console.log("************ Testing " + filename + " **************");
     var inDataFilename = path.join(__dirname, filename);
@@ -78,20 +99,39 @@ tests.forEach(function(filename) {
         });
     }
 
-    var samplesPerSecond = parseInt(header[0].substring(1).trim());
+    var headerData = header[0].substring(1).trim().split(" ");
+    var samplesPerSecond = parseInt(headerData[0]);
+    onFrequency = parseInt(headerData[1]);
+    assert(onFrequency);
+    offFrequency = parseInt(headerData[2]);
+    assert(offFrequency);
 
     outBits.length = 0;
     var modem = new Modem(samplesPerSecond, bitsPerSecond, onFrequency, offFrequency);
     modem.addBitListener(bitListener);
 
-    data.forEach(function(pair) {
-        if(pair.trim().length == 0) {
-            return;
-        }
-        var index_sample = pair.split(" ");
-        var sampleIndex = parseFloat(index_sample[0]);
-        var sample = parseFloat(index_sample[1]);
-        modem.demodulate(sample);
-    });
-    assert.deepEqual(outBits, correctBits);
+
+    if(data[0].match("^#")) {
+        // Treat this line as a wav file
+        readpcm.getPcmData(data[0].substring(1), function(sample, channel) {
+            if(channel === 0) {
+                //modem.demodulate(sample);
+            }
+        }, function() {
+            assert.deepEqual(outBits, correctBits);
+            console.log("************ " + filename + " passed! **************");
+        });
+    } else {
+        data.forEach(function(pair) {
+            if(pair.trim().length == 0) {
+                return;
+            }
+            var index_sample = pair.split(" ");
+            var sampleIndex = parseFloat(index_sample[0]);
+            var sample = parseFloat(index_sample[1]);
+            modem.demodulate(sample);
+        });
+        assert.deepEqual(outBits, correctBits);
+        console.log("************ " + filename + " passed! **************");
+    }
 });
