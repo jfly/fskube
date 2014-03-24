@@ -14,6 +14,7 @@ var offFrequency = 2200; // SPACE
 var outBits = [];
 var correctBits = null;
 function bitListener(bit) {
+    console.log("FOUND A " + bit);//<<<
     outBits.push(bit);
     if(correctBits !== null) {
         var correctBitsSlice = correctBits.slice(0, outBits.length);
@@ -24,7 +25,7 @@ function bitListener(bit) {
 function roundTripTest(modem, inBits) {
     var signal = modem.modulate(inBits);
 
-    /* Uncomment this block to view the signal via gnuplot.
+    //<<</* Uncomment this block to view the signal via gnuplot.
     var gnuPlot = '';
     for(var sampleIndex = 0; sampleIndex < signal.length; sampleIndex++) {
         var time = sampleIndex;
@@ -34,7 +35,7 @@ function roundTripTest(modem, inBits) {
     fs.writeFileSync(signalFilename, gnuPlot);
     console.log("Successfully wrote to " + signalFilename);
     console.log("Run ./signal.plot to view!");
-    */
+    //<<<*/
 
     outBits.length = 0;
     correctBits = inBits;
@@ -49,15 +50,14 @@ function roundTripTest(modem, inBits) {
 }
 
 var inBits = [0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1];
+inBits = [0,1,0,0,0,0,0,1,0,1,0,0,0,0,1];//<<<
 
-/*<<<
-[ 16000, 44100 ].forEach(function(samplesPerSecond) {
+[ 48000, 44100, 16000 ].forEach(function(samplesPerSecond) {
     console.log("**** Round trip test @ " + samplesPerSecond + "hZ ****");
     var modem = new Modem(samplesPerSecond, bitsPerSecond, onFrequency, offFrequency);
     modem.addBitListener(bitListener);
     roundTripTest(modem, inBits);
 });
-*/
 
 
 

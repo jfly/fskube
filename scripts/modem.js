@@ -48,13 +48,23 @@ Modem.prototype.timeToSampleIndex = function(time) {
 Modem.prototype.modulate = function(bits) {
     var bufferSize = bits.length * this._samplesPerBit;
     var samples = [];
+    var nextX = null;
     while(samples.length < bufferSize) {
         var sampleIndex = samples.length;
         var time = this.sampleIndexToTime(sampleIndex);
+        var nextTime = this.sampleIndexToTime(sampleIndex + 1);
         var bitIndex = Math.floor(sampleIndex / this._samplesPerBit);
         var bit = bits[bitIndex];
         var frequency = bit ? this._markFrequency : this._spaceFrequency;
-        samples[sampleIndex] = Math.sin(time * 2 * Math.PI * frequency);
+
+        var x = time * 2 * Math.PI * frequency;
+        var offset = 0;
+        if(nextX !== null) {
+            offset = nextX - x;
+        }
+        x += offset;
+        nextX = nextTime * 2 * Math.PI * frequency + offset;
+        samples[sampleIndex] = Math.sin(x);
     }
     return samples;
 };
@@ -106,13 +116,11 @@ Modem.prototype._addFrequencySeen = function(frequency) {
         // We've witnessed a change in frequency! Set our frequency
         // seen count to 1. This may mean throwing out data from an
         // incomplete previous frequency, log a message in that case.
-        if(this._lastFrequencySeenCount > 0) {
-            //<<< TODO - comment on this
-            if(this._lastFrequencySeenCount >= halfPeriodsPerBit/2) {
-                var bit = this.frequencyToBit(this._lastFrequencySeen);
-                //console.log("Dumping a bit " + bit + " here");//<<<
-                this.fireBit(bit);
-            }
+        //<<< TODO - comment on this
+        if(this._lastFrequencySeenCount > 0 && this._lastFrequencySeenCount >= halfPeriodsPerBit-1) {
+            var bit = this.frequencyToBit(this._lastFrequencySeen);
+            console.log("Dumping a bit " + bit + " here");//<<<
+            this.fireBit(bit);
             //<<<
             //console.log("Throwing away the " + this._lastFrequencySeenCount + " occurrences of " + this._lastFrequencySeen + "hZ halfPeriodsPerBit: " + halfPeriodsPerBit);
             //<<< This is the guy that confused us, just let him go
@@ -143,8 +151,8 @@ Modem.prototype._addZeroCrossing = function(index) {
         var spaceRatio = crossingTimeDelta / spaceCrossingTime;
         var distanceToMark = Math.abs(markRatio - 1);
         var distanceToSpace = Math.abs(spaceRatio - 1);
-        //console.log("Zero crossing! @" + index + " " + this._lastZeroCrossingIndex + " " + crossingTimeDelta);//<<<
-        //console.log('distanceToMark: ' + distanceToMark + " distanceToSpace: " + distanceToSpace);//<<<
+        console.log("Zero crossing! @" + index + " " + this._lastZeroCrossingIndex + " " + crossingTimeDelta);//<<<
+        console.log('distanceToMark: ' + distanceToMark + " distanceToSpace: " + distanceToSpace);//<<<
         if(distanceToMark < distanceToSpace) {
             this._addFrequencySeen(this._markFrequency);
         } else {
