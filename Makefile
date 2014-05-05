@@ -55,7 +55,7 @@ $(BLD)/fskube.js: $(BLD)/tester
 	emcc $(CFLAGS) $(SRC)/tester.cpp $(SRC)/fskube.cpp -o $(BLD)/fskube.js
 
 check: $(BLD)/_fskube.so
-	PYTHONPATH=$(BLD) python3 test.py
+	PYTHONPATH=$(BLD) python3 -m unittest discover -s test/ -p *Test.py
 
 clean:
 	rm -rf $(BLD)
