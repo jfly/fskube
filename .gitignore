@@ -1,4 +1,7 @@
 node_modules
 
+__pycache__
+*.pyc
+
 # vim stuff
 *.swp

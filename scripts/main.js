@@ -8,7 +8,7 @@ function MainCtrl($scope, $timeout) {
     // http://datasheets.maximintegrated.com/en/ds/DS8500.pdf
     var bitsPerSecond = 1200;
     var onFrequency = 1200; // MARK
-    var offFrequency = 2400; // SPACE
+    var offFrequency = 2200; // SPACE
 
     // TODO <<< need to pick a buffer size. This is a tradeoff
     // between latency and dropping information. Maybe webworkers
