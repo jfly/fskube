@@ -1,15 +1,6 @@
 node_modules
 
-# It would be nice to move this junk into a build directory we could ignore in
-# its entirety.
-fskube.js
-fskube.js.map
-fskube.py
-fskube_wrap.*
-tester
-*.d
-*.o
-*.so
+bld/
 
 __pycache__
 *.pyc
