@@ -9,7 +9,10 @@ template <class InType> class Receiver {
         virtual void receive(InType in) = 0;
 };
 
-template <class OutType> class Sender {
+// It doesn't really make sense for Sender to be a subclass of Receiver,
+// but doing it this way allows us to avoid multiple inheritance, which
+// embind doesn't support =(.
+template <class InType, class OutType> class Sender : public Receiver<InType> {
     protected:
         void send(OutType out) {
             if(nextReceiver) {

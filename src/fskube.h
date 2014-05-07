@@ -27,7 +27,7 @@ struct FskParams {
     }
 };
 
-class Modulator : public Receiver<bool>, public Sender<double> {
+class Modulator : public Sender<bool, double> {
     private:
         FskParams fsk;
         double continuousPhaseOffset;
@@ -42,7 +42,7 @@ struct Sample {
     bool valid;
 };
 
-class Demodulator : public Receiver<double>, public Sender<bool> {
+class Demodulator : public Sender<double, bool> {
     private:
         FskParams fsk;
         // Histeresis to avoid issues if the signal wavers around zero.

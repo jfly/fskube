@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+    <script>
+        var Module = {
+            'noExitRuntime': true
+        };
+    </script>
+    <script src="bld/fskube.js"></script>
+    <script>
+        var p = {
+            receive: function(b) {
+                console.log("got a " + b);
+            }
+        };
+
+        var fskParams = {};
+        fskParams.samplesPerSecond = 41000;
+        fskParams.bitsPerSecond = 1200;
+        fskParams.markFrequency = 2200;
+        fskParams.spaceFrequency = 1200;
+
+        var modulator = new Module.Modulator(fskParams);
+        var demodulator = new Module.Demodulator(fskParams);
+        var printer = Module.boolReceiver.implement(p);
+
+        modulator.connect(demodulator);
+        demodulator.connect(printer);
+
+        modulator.receive(1);
+        modulator.receive(0);
+        modulator.receive(1);
+        demodulator.flush();
+    </script>
+</html>

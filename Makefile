@@ -49,10 +49,12 @@ $(BLD)/fskube.py $(BLD)/fskube_wrap.cpp $(BLD)/fskube_wrap.h: $(BLD)/fskube.o $(
 	swig -python -c++ -o $(BLD)/fskube_wrap.cpp $(SRC)/fskube.i
 
 # Similar trick as above: fskube.js doesn't actually depend on
-# tester, but every time tester gets remade, fskube.js should be
+# fskube.o, but every time fskube.o gets remade, fskube.js should be
 # remade as well.
-$(BLD)/fskube.js: $(BLD)/tester
-	emcc $(CFLAGS) $(SRC)/tester.cpp $(SRC)/fskube.cpp -o $(BLD)/fskube.js
+$(BLD)/fskube.js: $(BLD)/fskube.o $(SRC)/embind.cpp
+# embind doesn't seem to support fastcomp yet, although support seems to
+# be coming quickly: https://groups.google.com/d/msg/emscripten-discuss/qFzNcA_9J2Y/GDrrD-qi0I8J
+	EMCC_FAST_COMPILER=0 em++ $(CFLAGS) --bind $(SRC)/embind.cpp $(SRC)/fskube.cpp -o $@
 
 check: $(BLD)/_fskube.so
 	PYTHONPATH=$(BLD) python3 -m unittest discover -s test/ -p *Test.py

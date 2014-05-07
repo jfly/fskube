@@ -12,7 +12,7 @@
 %template(boolReceiver) fskube::Receiver<bool>;
 %template(doubleReceiver) fskube::Receiver<double>;
 
-%template(boolSender) fskube::Sender<bool>;
-%template(doubleSender) fskube::Sender<double>;
+%template(boolReceiver_doubleSender) fskube::Sender<bool, double>;
+%template(doubleReceiver_boolSender) fskube::Sender<double, bool>;
 
 %include "fskube.h"
