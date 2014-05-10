@@ -8,7 +8,7 @@ function MainCtrl($scope, $timeout) {
     // http://datasheets.maximintegrated.com/en/ds/DS8500.pdf
     var bitsPerSecond = 1200;
     var onFrequency = 1200; // MARK
-    var offFrequency = 2200; // SPACE
+    var offFrequency = 2400; // SPACE
 
     // TODO <<< need to pick a buffer size. This is a tradeoff
     // between latency and dropping information. Maybe webworkers
@@ -64,7 +64,13 @@ function MainCtrl($scope, $timeout) {
     audioContext.createScriptProcessor = audioContext.createScriptProcessor ||audioContext.createJavaScriptNode;
     $scope.sampleRate = audioContext.sampleRate;
 
-    var modem = new Modem(audioContext.sampleRate, bitsPerSecond, onFrequency, offFrequency);
+    var fskParams = {};
+    fskParams.samplesPerSecond = audioContext.sampleRate;
+    fskParams.bitsPerSecond = bitsPerSecond;
+    fskParams.markFrequency = onFrequency;
+    fskParams.spaceFrequency = offFrequency;
+    var modulator = new Module.Modulator(fskParams);
+    var demodulator = new Module.Demodulator(fskParams);
     $scope.receivedBits = '';
     $scope.receivedMessage = function() {
         return decode($scope.receivedBits);
@@ -82,16 +88,31 @@ function MainCtrl($scope, $timeout) {
         }
         batchedBits.length = 0;
     }
-    modem.addBitListener(function(bit) {
-        batchedBits.push(bit);
-        if(pendingBitPusher === null) {
-            pendingBitPusher = $timeout(bitPusher, 1000.0 / MAX_SCREEN_UPDATE_RATE);
+    var bitListener = Module.boolReceiver.implement({
+        receive: function(bit) {
+            batchedBits.push(bit);
+            if(pendingBitPusher === null) {
+                pendingBitPusher = $timeout(bitPusher, 1000.0 / MAX_SCREEN_UPDATE_RATE);
+            }
         }
     });
+    demodulator.connect(bitListener);
+
+    var modulatedSignal = [];
+    var modulatorListener = Module.doubleReceiver.implement({
+        receive: function(d) {
+            modulatedSignal.push(d);
+        }
+    });
+    modulator.connect(modulatorListener);
 
     $scope.play = function() {
-        var bits = $scope.encodedMessage.replace(/ /g, "").split("").map(function(b) { return parseInt(b); })
-        var signal = modem.modulate(bits);
+        var bits = $scope.encodedMessage.replace(/ /g, "").split("").map(function(b) { return parseInt(b); });
+        modulatedSignal.length = 0;
+        bits.forEach(function(bit) {
+            modulator.receive(bit);
+        });
+        var signal = modulatedSignal;
         var signalBuffer = audioContext.createBuffer(1, signal.length, audioContext.sampleRate);
         var output = signalBuffer.getChannelData(0);
         for(var sampleIndex = 0; sampleIndex < signalBuffer.length; sampleIndex++) {
@@ -102,7 +123,7 @@ function MainCtrl($scope, $timeout) {
             // Simulate this happening outside of an angular apply().
             setTimeout(function() {
                 for(var sampleIndex = 0; sampleIndex < signalBuffer.length; sampleIndex++) {
-                    modem.demodulate(signal[sampleIndex]);
+                    demodulator.receive(signal[sampleIndex]);
                 }
             }, 0);
         }
@@ -128,7 +149,7 @@ function MainCtrl($scope, $timeout) {
             if($scope.savingSamples) {
                 savedSamples.push(inData[sampleIndex]);
             }
-            modem.demodulate(inData[sampleIndex]);
+            demodulator.receive(inData[sampleIndex]);
         }
     };
 
@@ -206,6 +227,7 @@ function MainCtrl($scope, $timeout) {
     };
 }
 
+// Allow blob links.
 var app = angular.module( 'modemTestModule', [] ).config( [
     '$compileProvider',
     function( $compileProvider )
