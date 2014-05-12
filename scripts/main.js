@@ -28,7 +28,7 @@ function MainCtrl($scope, $timeout) {
         return bitstream;
     }
     function decode(encodedMessage) {
-        encodedMessage = encodedMessage.replace(/ /g, "");
+        encodedMessage = encodedMessage.replace(/[^01]/g, "");
         var chars = _.values(_.groupBy(encodedMessage, function(el, i) {
             return Math.floor(i/8);
         }));
