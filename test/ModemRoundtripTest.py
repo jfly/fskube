@@ -13,7 +13,7 @@ class Capturer(fskube.boolReceiver):
         self.bits = []
 
     def receive(self, bit):
-        self.bits.append(bit + 0)
+        self.bits.append(int(bit))
 
 class RoundtripTest(unittest.TestCase):
     
