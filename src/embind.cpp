@@ -49,6 +49,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
 
     class_<Modulator, base<Sender<bool, double>>>("Modulator")
         .constructor<FskParams>()
+        .function("reset", &Modulator::reset)
         ;
 
     class_<Demodulator, base<Sender<double, bool>>>("Demodulator")

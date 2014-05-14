@@ -8,6 +8,10 @@ namespace fskube {
 #define LOG_HANDLE "fskube"
 
 Modulator::Modulator(FskParams fsk) : fsk(fsk) {
+    reset();
+}
+
+void Modulator::reset() {
     continuousPhaseOffset = 0;
 }
 
@@ -33,7 +37,7 @@ Demodulator::Demodulator(FskParams fsk) : fsk(fsk) {
 
 void Demodulator::reset() {
     sampleIndex = 0;
-    lastZeroCrossingIndex = 0;
+    lastZeroCrossing = {};
     insignificantSampleCount = 0;
     lastSignificantSample = {};
 
@@ -42,7 +46,8 @@ void Demodulator::reset() {
 }
 
 void Demodulator::flush() {
-    if(lastFrequencyHalfSeenCount > 0) {
+    LOG2("flush() lastFrequencyHalfSeenCount %d lastFrequencyHalfSeen %d", lastFrequencyHalfSeenCount, lastFrequencyHalfSeen);
+    if(lastFrequencyHalfSeen > 0) {
         send(fsk.frequencyToBit(lastFrequencyHalfSeen));
     }
     reset();
@@ -55,6 +60,13 @@ template <typename T> int sgn(T val) {
 
 void Demodulator::receive(double value) {
     sampleIndex++;
+    LOG4("receive(%f) sampleIndex: %llu", value, sampleIndex);
+
+    Sample sample;
+    sample.index = sampleIndex;
+    sample.value = value;
+    sample.valid = true;
+
     bool isHigh = value >= highThreshold;
     bool isLow = value <= lowThreshold;
     if(!isHigh && !isLow) {
@@ -63,7 +75,6 @@ void Demodulator::receive(double value) {
             // We've seen a bunch of insignificant signals in a row.
             // There's probably no signal. Flush what we have.
             flush();
-            return;
         }
         // Quick bootstrapping. If we haven't seen any "significant"
         // signals yet, and this one is close to zero (ie:
@@ -72,10 +83,11 @@ void Demodulator::receive(double value) {
         // of zeros in a row, and we don't want them to be treated as
         // half periods of our signal.
         if(!lastSignificantSample.valid) {
-            lastZeroCrossingIndex = sampleIndex;
+            lastZeroCrossing = sample;
         }
         return;
     }
+    LOG4("receive() %f %d %f", value, lastSignificantSample.valid, lastSignificantSample.value);
     insignificantSampleCount = 0;
     if(lastSignificantSample.valid) {
         unsigned long long index = sampleIndex;
@@ -96,13 +108,15 @@ void Demodulator::receive(double value) {
             //   C = (value*lastIndex - lastValue*index) / (value - lastValue)
             unsigned long long crossingIndex =
                 (value*lastIndex - lastValue*index) / (value - lastValue);
+            Sample crossingSample;
+            crossingSample.index = crossingIndex;
+            crossingSample.value = 0;
+            crossingSample.valid = true;
             // We crossed the x axis in a "significant" way!
-            addZeroCrossing(crossingIndex);
+            addZeroCrossing(crossingSample);
         }
     }
-    lastSignificantSample.index = sampleIndex;
-    lastSignificantSample.value = value;
-    lastSignificantSample.valid = true;
+    lastSignificantSample = sample;
 }
 
 /**
@@ -112,9 +126,11 @@ void Demodulator::receive(double value) {
  * If the frequency is near the mark or space frequency, 
  * call either addMarkFrequencySeen() or addSpaceFrequencySeen().
  */
-void Demodulator::addZeroCrossing(unsigned long long index) {
-    if(lastZeroCrossingIndex > 0) {
-        double crossingTimeDelta = fsk.samplesToTime(index - lastZeroCrossingIndex);
+void Demodulator::addZeroCrossing(Sample sample) {
+    LOG1("Zero crossing! @%llu (last one was at %llu isValid: %d)",
+            sample.index, lastZeroCrossing.index, lastZeroCrossing.valid);
+    if(lastZeroCrossing.valid) {
+        double crossingTimeDelta = fsk.samplesToTime(sample.index - lastZeroCrossing.index);
         // 1/2th the hZ of a signal is its expected amount of time
         // between zero crossings.
         double markCrossingTime = 0.5/fsk.markFrequency;
@@ -123,8 +139,7 @@ void Demodulator::addZeroCrossing(unsigned long long index) {
         double spaceRatio = crossingTimeDelta / spaceCrossingTime;
         double distanceToMark = std::abs(markRatio - 1);
         double distanceToSpace = std::abs(spaceRatio - 1);
-        LOG1("Zero crossing! @%llu %llu %f",
-                index, lastZeroCrossingIndex, crossingTimeDelta);
+        LOG1("Zero crossing of duration %f seconds", crossingTimeDelta);
         LOG1("distanceToMark: %f distanceToSpace: %f",
                 distanceToMark, distanceToSpace);
         if(distanceToMark < distanceToSpace) {
@@ -133,7 +148,9 @@ void Demodulator::addZeroCrossing(unsigned long long index) {
             addFrequencyHalfSeen(fsk.spaceFrequency);
         }
     }
-    lastZeroCrossingIndex = index;
+    lastZeroCrossing = sample;
+    LOG1("Zero crossing is now %llu isValid: %d)",
+            lastZeroCrossing.index, lastZeroCrossing.valid);
 }
 
 void Demodulator::addFrequencyHalfSeen(unsigned int frequency) {
@@ -158,7 +175,8 @@ void Demodulator::addFrequencyHalfSeen(unsigned int frequency) {
         if(lastFrequencyHalfSeenCount == 0) {
             lastFrequencyHalfSeen = frequency;
             lastFrequencyHalfSeenCount = 1;
-        } else if(lastFrequencyHalfSeenCount >= halfPeriodsPerBit - 1) {
+        //<<<} else if(lastFrequencyHalfSeenCount >= halfPeriodsPerBit - 1) {
+        } else if(lastFrequencyHalfSeenCount >= 1) {//<<<
             // We've seen some occurences of the previous frequency (but
             // we hadn't seen enough to fire a bit). Dump the bit, but
             // reset lastFrequencyHalfSeenCount. The intuition here is that
@@ -166,7 +184,7 @@ void Demodulator::addFrequencyHalfSeen(unsigned int frequency) {
             // and we don't want to count it towards our next bit.
             bool bit = fsk.frequencyToBit(lastFrequencyHalfSeen);
             send(bit);
-            lastFrequencyHalfSeen = 0;
+            lastFrequencyHalfSeen = frequency;
             lastFrequencyHalfSeenCount = 0;
         } else {
             LOG2("Throwing away the %u occurrences of %uhZ",

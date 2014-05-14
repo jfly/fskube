@@ -34,6 +34,7 @@ class Modulator : public Sender<bool, double> {
     public:
         Modulator(FskParams fsk);
         virtual void receive(bool bit);
+        virtual void reset();
 };
 
 struct Sample {
@@ -52,7 +53,7 @@ class Demodulator : public Sender<double, bool> {
         double lowThreshold = -0.4;
 
         unsigned long long sampleIndex;
-        unsigned long long lastZeroCrossingIndex;
+        Sample lastZeroCrossing;
         unsigned int insignificantSampleCount;
         Sample lastSignificantSample;
 
@@ -60,7 +61,7 @@ class Demodulator : public Sender<double, bool> {
         unsigned int lastFrequencyHalfSeenCount;
 
         void reset();
-        void addZeroCrossing(unsigned long long index);
+        void addZeroCrossing(Sample sample);
         void addFrequencyHalfSeen(unsigned int frequency);
     public:
         Demodulator(FskParams fsk);

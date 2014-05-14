@@ -12,7 +12,7 @@ PYTHONWRAPPER_OBJS := $(BLD)/fskube.o $(BLD)/fskube_wrap.o
 # Create BLD directory if necessary
 $(shell mkdir -p $(BLD))
 
-.PHONY: all py js jsmin check clean
+.PHONY: all py js jsmin check clean serve
 
 default: $(BLD)/tester
         
@@ -75,13 +75,5 @@ check: py
 clean:
 	rm -rf $(BLD)
 
-#<<<
-serve:
+serve: js
 	python -m SimpleHTTPServer
-
-test/signal.data: scripts/*.js test/*.js
-	node test/modemtest.js
-
-graph: test/signal.data
-	gnuplot signal.plot
-#<<<

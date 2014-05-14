@@ -1,10 +1,10 @@
 #!/usr/bin/env gnuplot
 
-set title "Fsk samples"
+set title "Fsk samples a2"
 set xlabel "Time"
 set ylabel "Voltage?"
 set autoscale
-plot "test/signal.data" title "" with linespoints
+plot "test/ABC.testdata" title "" with linespoints
 
 # When people run this script, a window
 # appears on the screen and immediately disappears.

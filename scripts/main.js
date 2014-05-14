@@ -109,6 +109,7 @@ function MainCtrl($scope, $timeout) {
     $scope.play = function() {
         var bits = $scope.encodedMessage.replace(/ /g, "").split("").map(function(b) { return parseInt(b); });
         modulatedSignal.length = 0;
+        modulator.reset();
         bits.forEach(function(bit) {
             modulator.receive(bit);
         });

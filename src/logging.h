@@ -16,6 +16,7 @@
 
 #define LOG(level, format, ...) \
 do { \
+    continue;/*<<< THE FOLLOWING IS VERY EXPENSIVE, OPTIMIZE >>>*/ \
     char *logLevel = getenv("LOG_" LOG_HANDLE); \
     if(logLevel && (strchr(logLevel, '*') || strchr(logLevel, '0' + level))) { \
         printf("%s/%d " format "\n", LOG_HANDLE, level, ##__VA_ARGS__); \
