@@ -8,7 +8,7 @@ function MainCtrl($scope, $timeout) {
     // http://datasheets.maximintegrated.com/en/ds/DS8500.pdf
     var bitsPerSecond = 1200;
     var onFrequency = 1200; // MARK
-    var offFrequency = 2400; // SPACE
+    var offFrequency = 2200; // SPACE
 
     // TODO <<< need to pick a buffer size. This is a tradeoff
     // between latency and dropping information. Maybe webworkers
@@ -23,13 +23,27 @@ function MainCtrl($scope, $timeout) {
 
     function encode(message) {
         var bitstream = message.split("").map(function(ch) {
-            return (0x100 | ch.charCodeAt(0)).toString(2).substring(1);
+            var bits = (0x100 | ch.charCodeAt(0)).toString(2).substring(1);
+            // Ensure that there are not long strings of ones and zeros by
+            // forcing the message to alternate every single bit. This is
+            // not very efficient. We should do proper rs232 instead!
+            var paddedBits = "";
+            for(var i = 0; i < bits.length; i++) {
+                paddedBits += bits[i] + {"0": "1", "1": "0"}[bits[i]];
+            }
+            return paddedBits;
         }).join(" ");
         return bitstream;
     }
     function decode(encodedMessage) {
-        encodedMessage = encodedMessage.replace(/[^01]/g, "");
-        var chars = _.values(_.groupBy(encodedMessage, function(el, i) {
+        var paddedBits = encodedMessage.replace(/[^01]/g, "");
+        // See comment in encode() about padding to prevent long strings of
+        // repeated bits. This can be improved.
+        var message = "";
+        for(var i = 0; i < paddedBits.length; i+=2) {
+            message += paddedBits[i];
+        }
+        var chars = _.values(_.groupBy(message, function(el, i) {
             return Math.floor(i/8);
         }));
         chars = chars.map(function(ch) {
@@ -81,7 +95,7 @@ function MainCtrl($scope, $timeout) {
         pendingBitPusher = null;
         for(var i = 0; i < batchedBits.length; i++) {
             var bit = batchedBits[i];
-            if($scope.receivedBits.length % 9 == 8) {
+            if(($scope.receivedBits.length + 1) % 17 == 0) {
                 $scope.receivedBits += " ";
             }
             $scope.receivedBits += (bit ? "1" : "0");
