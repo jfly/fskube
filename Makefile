@@ -68,9 +68,7 @@ $(BLD)/fskube.py $(BLD)/fskube_wrap.cpp $(BLD)/fskube_wrap.h: $(BLD)/fskube.o $(
 # fskube.o, but every time fskube.o gets remade, fskube.js should be
 # remade as well.
 $(BLD)/fskube.js: $(BLD)/fskube.o $(SRC)/embind.cpp
-# embind doesn't seem to support fastcomp yet, although support seems to
-# be coming quickly: https://groups.google.com/d/msg/emscripten-discuss/qFzNcA_9J2Y/GDrrD-qi0I8J
-	EMCC_FAST_COMPILER=0 em++ $(CFLAGS) --bind $(SRC)/embind.cpp $(SRC)/fskube.cpp -o $@
+	em++ $(CFLAGS) --bind $(SRC)/embind.cpp $(SRC)/fskube.cpp -o $@
 
 $(BLD)/fskube.min.js: $(BLD)/fskube.js
 	$(CLOJURE_COMPILER) $^ --language_in ECMASCRIPT5 > $@

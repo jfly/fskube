@@ -69,6 +69,25 @@ class Demodulator : public Sender<double, bool> {
         void flush();
 };
 
+class Rs232or : public Sender<int, bool> {
+    public:
+        Rs232or();
+        virtual void receive(int data);
+};
+
+class DeRs232or : public Sender<bool, int> {
+    private:
+        bool waitingForStart;
+        unsigned int idleCount;
+
+        unsigned char inProgressChar;
+        unsigned int nthBit;
+    public:
+        DeRs232or();
+        virtual void receive(bool b);
+        void reset();
+};
+
 } // namespace fskube
 
 #endif // FSKUBE_H

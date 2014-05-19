@@ -19,6 +19,13 @@ struct doubleReceiverWrapper : public wrapper<Receiver<double>> {
     }
 };
 
+struct intReceiverWrapper : public wrapper<Receiver<int>> {
+    EMSCRIPTEN_WRAPPER(intReceiverWrapper);
+    void receive(int b) {
+        return call<void>("receive", b);
+    }
+};
+
 EMSCRIPTEN_BINDINGS(my_module) {
     value_object<FskParams>("FskParams")
         .field("samplesPerSecond", &FskParams::samplesPerSecond)
@@ -39,12 +46,25 @@ EMSCRIPTEN_BINDINGS(my_module) {
         .allow_subclass<doubleReceiverWrapper>("doubleReceiverWrapper")
         ;
 
+    class_<Receiver<int>>("intReceiver")
+        .function("receive", &Receiver<int>::receive)
+        .allow_subclass<intReceiverWrapper>("intReceiverWrapper")
+        ;
+
     class_<Sender<bool, double>, base<Receiver<bool>>>("boolReceiver_doubleSender")
         .function("connect", &Sender<bool, double>::connect, allow_raw_pointers())
         ;
 
     class_<Sender<double, bool>, base<Receiver<double>>>("doubleReceiver_boolSender")
         .function("connect", &Sender<double, bool>::connect, allow_raw_pointers())
+        ;
+
+    class_<Sender<int, bool>, base<Receiver<int>>>("intReceiver_boolSender")
+        .function("connect", &Sender<int, bool>::connect, allow_raw_pointers())
+        ;
+
+    class_<Sender<bool, int>, base<Receiver<bool>>>("boolReceiver_intSender")
+        .function("connect", &Sender<bool, int>::connect, allow_raw_pointers())
         ;
 
     class_<Modulator, base<Sender<bool, double>>>("Modulator")
@@ -55,6 +75,15 @@ EMSCRIPTEN_BINDINGS(my_module) {
     class_<Demodulator, base<Sender<double, bool>>>("Demodulator")
         .constructor<FskParams>()
         .function("flush", &Demodulator::flush)
+        ;
+
+    class_<Rs232or, base<Sender<int, bool>>>("Rs232or")
+        .constructor()
+        ;
+
+    class_<DeRs232or, base<Sender<bool, int>>>("DeRs232or")
+        .constructor()
+        .function("reset", &DeRs232or::reset)
         ;
 }
 

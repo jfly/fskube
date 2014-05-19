@@ -24,7 +24,7 @@ class Capturer(fskube.boolReceiver):
             print("received a %s" % bit)
         self.bits.append(int(bit))
 
-class RoundtripTest():
+class RoundtripTest(unittest.TestCase):
     
     def doRoundtrip(self, samplesPerSecond, bits):
         print("Roundtrip test at %shZ" % samplesPerSecond)
@@ -57,15 +57,15 @@ class DataTest(unittest.TestCase):
     maxDiff = None
 
     def test(self):
-        testsDir = os.path.dirname(os.path.realpath(__file__))
+        testDataDir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "data")
 
         def isTestData(filename):
             return filename.endswith(".testdata");
 
-        tests = sorted(filter(isTestData, os.listdir(testsDir)))
+        tests = sorted(filter(isTestData, os.listdir(testDataDir)))
         for filename in tests:
             print("************ Testing " + filename + " **************")
-            inDataFilename = os.path.join(testsDir, filename)
+            inDataFilename = os.path.join(testDataDir, filename)
             with open(inDataFilename) as f:
                 data = f.read()
             data = data.split("\n")
@@ -97,7 +97,7 @@ class DataTest(unittest.TestCase):
             if data[0].startswith("#"):
                 # Treat this line as a wav file
                 wavFilename = data[0][1:].strip()
-                with open(os.path.join(testsDir, wavFilename), 'rb') as f:
+                with open(os.path.join(testDataDir, wavFilename), 'rb') as f:
                     wav = wave.open(f)
                     # http://stackoverflow.com/a/2602334
                     nchannels = wav.getnchannels()

@@ -21,36 +21,43 @@ function MainCtrl($scope, $timeout) {
     // only periodically flushing them to the angular-ed $scope.receivedBits.
     var MAX_SCREEN_UPDATE_RATE = 10; // updates per second
 
+    var rs232or = new Module.Rs232or();
+    var rs232Listener = {
+        bits: [],
+        receive: function(bit) {
+            this.bits.push(bit);
+        }
+    };
+    rs232or.connect(Module.boolReceiver.implement(rs232Listener));
+
+    var deRs232or = new Module.DeRs232or();
+    var deRs232Listener = {
+        chars: [],
+        receive: function(ch) {
+            this.chars.push(String.fromCharCode(ch));
+        }
+    };
+    deRs232or.connect(Module.intReceiver.implement(deRs232Listener));
+
     function encode(message) {
-        var bitstream = message.split("").map(function(ch) {
-            var bits = (0x100 | ch.charCodeAt(0)).toString(2).substring(1);
-            // Ensure that there are not long strings of ones and zeros by
-            // forcing the message to alternate every single bit. This is
-            // not very efficient. We should do proper rs232 instead!
-            var paddedBits = "";
-            for(var i = 0; i < bits.length; i++) {
-                paddedBits += bits[i] + {"0": "1", "1": "0"}[bits[i]];
-            }
-            return paddedBits;
-        }).join(" ");
-        return bitstream;
+        var bits = "";
+        for(var i = 0; i < message.length; i++) {
+            rs232Listener.bits.length = 0;
+            rs232or.receive(message.charCodeAt(i));
+            bits += rs232Listener.bits.map(function(bit) { return bit ? "1" : "0"; }).join("");
+            bits += " ";
+        }
+        return bits.trim();
     }
     function decode(encodedMessage) {
+        deRs232or.reset();
+        deRs232Listener.chars.length = 0;
         var paddedBits = encodedMessage.replace(/[^01]/g, "");
-        // See comment in encode() about padding to prevent long strings of
-        // repeated bits. This can be improved.
-        var message = "";
-        for(var i = 0; i < paddedBits.length; i+=2) {
-            message += paddedBits[i];
+        for(var i = 0; i < paddedBits.length; i++) {
+            var bit = paddedBits[i] == "0" ? 0 : 1;
+            deRs232or.receive(bit);
         }
-        var chars = _.values(_.groupBy(message, function(el, i) {
-            return Math.floor(i/8);
-        }));
-        chars = chars.map(function(ch) {
-            var codePoint = parseInt(ch.join(""), 2);
-            return String.fromCharCode(codePoint);
-        });
-        return chars.join("");
+        return deRs232Listener.chars.join("");
     }
 
     var message = "Hello, world!";
@@ -95,7 +102,7 @@ function MainCtrl($scope, $timeout) {
         pendingBitPusher = null;
         for(var i = 0; i < batchedBits.length; i++) {
             var bit = batchedBits[i];
-            if(($scope.receivedBits.length + 1) % 17 == 0) {
+            if(($scope.receivedBits.length + 1) % 11 == 0) {
                 $scope.receivedBits += " ";
             }
             $scope.receivedBits += (bit ? "1" : "0");
