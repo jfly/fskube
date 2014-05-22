@@ -41,7 +41,7 @@ class RoundtripTest(unittest.TestCase):
         demodulator.connect(c)
 
         for bit in bits:
-            modulator.receive(bit)
+            modulator.receive(bool(bit))
 
         demodulator.flush()
 

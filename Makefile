@@ -2,7 +2,7 @@ BLD := bld
 SRC := src
 RELEASE := release
 CXX := clang++
-CFLAGS := -Wall -g -std=c++11
+CFLAGS := -Wall -g -std=c++11 -Wno-c++11-narrowing 
 INC := -I/usr/include/python3.3m -I$(SRC)
 
 CLOJURE_COMPILER := java -jar ~/thirdrepos/cc/compiler.jar 
@@ -62,7 +62,7 @@ $(BLD)/%.o: $(BLD)/%.cpp
 # should get remade whenever fskube.o is remade, so it's listed
 # as a dependency.
 $(BLD)/fskube.py $(BLD)/fskube_wrap.cpp $(BLD)/fskube_wrap.h: $(BLD)/fskube.o $(SRC)/fskube.i
-	swig -python -c++ -o $(BLD)/fskube_wrap.cpp $(SRC)/fskube.i
+	swig -builtin -python -c++ -o $(BLD)/fskube_wrap.cpp $(SRC)/fskube.i
 
 # Similar trick as above: fskube.js doesn't actually depend on
 # fskube.o, but every time fskube.o gets remade, fskube.js should be

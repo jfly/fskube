@@ -69,6 +69,9 @@ class Demodulator : public Sender<double, bool> {
         void flush();
 };
 
+// Convert bytes <-> bits via 8-N-1
+// See http://en.wikipedia.org/wiki/8-N-1
+
 class Rs232or : public Sender<int, bool> {
     public:
         Rs232or();
@@ -86,6 +89,38 @@ class DeRs232or : public Sender<bool, int> {
         DeRs232or();
         virtual void receive(bool b);
         void reset();
+};
+
+// Convert bytes <-> StackmatState's according to the stackmat protocol
+// See http://hackvalue.de/hv_atmel_stackmat
+
+#define GEN2SIGNAL_BYTES 9
+#define GEN3SIGNAL_BYTES 10
+#define LARGESTSIGNAL_BYTES GEN3SIGNAL_BYTES
+
+struct StackmatState {
+    unsigned int millis;
+    unsigned int generation;
+    char commandByte;
+    bool operator==(StackmatState& o) const {
+        return millis == o.millis && generation == o.generation && commandByte == o.commandByte;
+    }
+};
+
+class StackmatSynthesizer : public Sender<StackmatState, int> {
+    public:
+        StackmatSynthesizer();
+        virtual void receive(StackmatState s);
+};
+
+class StackmatInterpreter : public Sender<int, StackmatState> {
+    private:
+        int receivedBytes[LARGESTSIGNAL_BYTES];
+        int receivedBytesLength;
+    public:
+        StackmatInterpreter();
+        void reset();
+        virtual void receive(int byte);
 };
 
 } // namespace fskube

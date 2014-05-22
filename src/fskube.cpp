@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <math.h>
 #include <cmath>
 #include "fskube.h"
@@ -60,7 +61,7 @@ template <typename T> int sgn(T val) {
 
 void Demodulator::receive(double value) {
     sampleIndex++;
-    LOG4("receive(%f) sampleIndex: %llu", value, sampleIndex);
+    LOG4("Demodulator::receive(%f) sampleIndex: %llu", value, sampleIndex);
 
     Sample sample;
     sample.index = sampleIndex;
@@ -172,11 +173,7 @@ void Demodulator::addFrequencyHalfSeen(unsigned int frequency) {
         }
     } else {
         // We've witnessed a change in frequency!
-        if(lastFrequencyHalfSeenCount == 0) {
-            lastFrequencyHalfSeen = frequency;
-            lastFrequencyHalfSeenCount = 1;
-        //<<<} else if(lastFrequencyHalfSeenCount >= halfPeriodsPerBit - 1) {
-        } else if(lastFrequencyHalfSeenCount >= 1) {//<<<
+        if(lastFrequencyHalfSeenCount >= 1) {
             // We've seen some occurences of the previous frequency (but
             // we hadn't seen enough to fire a bit). Dump the bit, but
             // reset lastFrequencyHalfSeenCount. The intuition here is that
@@ -187,10 +184,8 @@ void Demodulator::addFrequencyHalfSeen(unsigned int frequency) {
             lastFrequencyHalfSeen = frequency;
             lastFrequencyHalfSeenCount = 0;
         } else {
-            LOG2("Throwing away the %u occurrences of %uhZ",
-                    lastFrequencyHalfSeenCount, lastFrequencyHalfSeen);
-            lastFrequencyHalfSeen = 0;
-            lastFrequencyHalfSeenCount = 0;
+            lastFrequencyHalfSeen = frequency;
+            lastFrequencyHalfSeenCount = 1;
         }
     }
 }
@@ -246,6 +241,8 @@ void DeRs232or::receive(bool b) {
         // stop signal (low). If it isn't, we drop it.
         if(b == 0) {
             send(inProgressChar);
+        } else {
+            LOG1("Throwing away incomplete character %d", inProgressChar);
         }
         waitingForStart = true;
         idleCount = 0;
@@ -254,6 +251,127 @@ void DeRs232or::receive(bool b) {
 
     inProgressChar |= (b << nthBit);
     nthBit++;
+}
+
+
+StackmatSynthesizer::StackmatSynthesizer() {}
+
+#define MILLIS_PER_MINUTE (60*1000)
+#define MILLIS_PER_SECOND (1000)
+#define MILLIS_PER_DECISECOND (100)
+#define MILLIS_PER_CENTISECOND (10)
+
+void StackmatSynthesizer::receive(StackmatState state) {
+    send(state.commandByte);
+
+    int checksum = 64;
+    int millis = state.millis;
+
+    // minutes
+    int minutes_digit = millis / MILLIS_PER_MINUTE;
+    millis %= MILLIS_PER_MINUTE;
+    checksum += minutes_digit;
+    send('0' + minutes_digit);
+    
+    // seconds
+    int seconds = millis / MILLIS_PER_SECOND;
+    millis %= MILLIS_PER_SECOND;
+
+    int dekaseconds_digit = seconds / 10;
+    checksum += dekaseconds_digit;
+    send('0' + dekaseconds_digit);
+
+    int seconds_digit = seconds % 10;
+    checksum += seconds_digit;
+    send('0' + seconds_digit);
+
+    // decimal
+    int deciseconds_digit = millis / MILLIS_PER_DECISECOND;
+    millis = millis % MILLIS_PER_DECISECOND;
+    checksum += deciseconds_digit;
+    send('0' + deciseconds_digit);
+
+    int centiseconds_digit = millis / MILLIS_PER_CENTISECOND;
+    millis = millis % MILLIS_PER_CENTISECOND;
+    checksum += centiseconds_digit;
+    send('0' + centiseconds_digit);
+
+    if(state.generation == 3) {
+        int milliseconds_digit = millis;
+        checksum += milliseconds_digit;
+        send('0' + milliseconds_digit);
+    }
+
+    // checksum
+    send(checksum);
+
+    // LF
+    send('\n');
+
+    // CR
+    send('\r');
+
+    // idle
+    send(-1);
+}
+
+StackmatInterpreter::StackmatInterpreter() {
+    reset();
+}
+
+void StackmatInterpreter::reset() {
+    receivedBytesLength = 0;
+}
+
+void StackmatInterpreter::receive(int byte) {
+    LOG2("StackmatInterpreter::receive(%d)", byte);
+    if(byte < 0) {
+        // idle received, parse collected characters
+        switch(receivedBytesLength) {
+            case GEN2SIGNAL_BYTES:
+            case GEN3SIGNAL_BYTES: {
+                StackmatState state;
+                if(receivedBytesLength == GEN2SIGNAL_BYTES) {
+                    state.generation = 2;
+                } else if(receivedBytesLength == GEN3SIGNAL_BYTES) {
+                    state.generation = 3;
+                } else {
+                    assert(false);
+                }
+                state.commandByte = receivedBytes[0];
+
+                state.millis = 0;
+                state.millis += (receivedBytes[1] - '0') * MILLIS_PER_MINUTE;
+
+                int seconds = 10 * (receivedBytes[2] - '0') + (receivedBytes[3] - '0');
+                state.millis += seconds * MILLIS_PER_SECOND;
+                state.millis += (receivedBytes[4] - '0') * MILLIS_PER_DECISECOND;
+                state.millis += (receivedBytes[5] - '0') * MILLIS_PER_CENTISECOND;
+                if(state.generation == 3) {
+                    state.millis += (receivedBytes[6] - '0');
+                }
+
+                send(state);
+                receivedBytesLength = 0;
+                break;
+            }
+            default:
+                LOG1("Throwing away partial signal of %d bytes" , receivedBytesLength);
+                break;
+        }
+        return;
+    }
+
+    if(receivedBytesLength >= LARGESTSIGNAL_BYTES) {
+        // Uh oh. We've received more bytes than can possibly comprise
+        // a stackmat signal. We should have seen an idle by now.
+        // We have nothing better to do than to throw away what we've seen so far.
+        LOG1("Throwing away run on signal");
+        reset();
+        return;
+    }
+
+    receivedBytes[receivedBytesLength++] = byte;
 }
 
 } // namespace fskube
