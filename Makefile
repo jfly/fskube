@@ -3,7 +3,7 @@ SRC := src
 RELEASE := release
 CXX := clang++
 CFLAGS := -Wall -g -std=c++11 -Wno-c++11-narrowing 
-INC := -I/usr/include/python3.3m -I$(SRC)
+INC := -I/usr/include/python3.3m -I/usr/include/python3.2 -I$(SRC)
 
 CLOJURE_COMPILER := java -jar ~/thirdrepos/cc/compiler.jar 
 
