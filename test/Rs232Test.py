@@ -4,27 +4,11 @@ import os
 import unittest
 
 import fskube
+import FskTest
 
-DEBUG = False
-if DEBUG:
-    os.environ["LOG_fskube"] = "*"
-
-class CharCapturer(fskube.intReceiver):
-    def __init__(self):
-        super().__init__()
-        self.reset()
-
-    def reset(self):
-        self.chars = []
-
-    def receive(self, char):
-        if DEBUG:
-            print("received a %s" % char)
-        self.chars.append(char)
-
-class Rs232Test(unittest.TestCase):
+class Rs232Test(FskTest.FskTest):
     def test(self):
-        capturer = CharCapturer()
+        capturer = self.createCapturer(fskube.intReceiver)
         rs232or = fskube.Rs232or()
         deRs232or = fskube.DeRs232or()
         rs232or.connect(deRs232or)
@@ -34,35 +18,19 @@ class Rs232Test(unittest.TestCase):
         for ch in "this is a message!":
             rs232or.receive(ord(ch))
 
-        receivedMessage = "".join(map(chr, capturer.chars))
+        receivedMessage = "".join(map(chr, capturer.data))
         self.assertEqual(receivedMessage, secretMessage)
 
         capturer.reset()
         # Send an idle, we expect to receive >= 1 idles.
         rs232or.receive(-1)
-        self.assertGreaterEqual(len(capturer.chars), 1)
-        for ch in capturer.chars:
+        self.assertGreaterEqual(len(capturer.data), 1)
+        for ch in capturer.data:
             self.assertEqual(ch, -1)
 
-class StackmatStateCapturer(fskube.stackmatstateReceiver):
-    def __init__(self):
-        super().__init__()
-        self.reset()
-
-    def reset(self):
-        self.states = []
-
-    def receive(self, state):
-        # state is on the stack of our caller, copy it into python's heap
-        state = fskube.StackmatState(state)
-        if DEBUG:
-            print("received a %s: %s, %s, %s" %
-                    (state, state.commandByte, state.generation, state.millis))
-        self.states.append(state)
-
-class StackmatTest(unittest.TestCase):
+class StackmatTest(FskTest.FskTest):
     def test(self):
-        capturer = StackmatStateCapturer()
+        capturer = self.createCapturer(fskube.stackmatstateReceiver)
         synthesizer = fskube.StackmatSynthesizer()
         interpreter = fskube.StackmatInterpreter()
         synthesizer.connect(interpreter)
@@ -77,7 +45,7 @@ class StackmatTest(unittest.TestCase):
             synthesizer.receive(state)
             sentStates.append(state)
 
-        for sentState, receivedState in zip(sentStates, capturer.states):
+        for sentState, receivedState in zip(sentStates, capturer.data):
             self.assertEqual(sentState.commandByte, receivedState.commandByte)
             self.assertEqual(sentState.generation, receivedState.generation)
             self.assertEqual(sentState.millis, receivedState.millis)

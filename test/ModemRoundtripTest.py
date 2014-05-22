@@ -6,25 +6,9 @@ import struct
 import unittest
 
 import fskube
+import FskTest
 
-DEBUG = False
-if DEBUG:
-    os.environ["LOG_fskube"] = "*"
-
-class Capturer(fskube.boolReceiver):
-    def __init__(self):
-        super().__init__()
-        self.reset()
-
-    def reset(self):
-        self.bits = []
-
-    def receive(self, bit):
-        if DEBUG:
-            print("received a %s" % bit)
-        self.bits.append(int(bit))
-
-class RoundtripTest(unittest.TestCase):
+class RoundtripTest(FskTest.FskTest):
     
     def doRoundtrip(self, samplesPerSecond, bits):
         print("Roundtrip test at %shZ" % samplesPerSecond)
@@ -36,7 +20,7 @@ class RoundtripTest(unittest.TestCase):
         fskParams.spaceFrequency = 2400
         modulator = fskube.Modulator(fskParams)
         demodulator = fskube.Demodulator(fskParams)
-        c = Capturer()
+        c = self.createCapturer(fskube.boolReceiver)
         modulator.connect(demodulator)
         demodulator.connect(c)
 
@@ -45,16 +29,14 @@ class RoundtripTest(unittest.TestCase):
 
         demodulator.flush()
 
-        self.assertEqual(c.bits, bits)
+        self.assertEqual(c.data, bits)
 
     def test(self):
         bits = [0,1,0,0,0,0,0,1,0,1,0,0,0,0,1]
         for samplesPerSecond in [ 48000, 44100, 16000 ]:
             self.doRoundtrip(samplesPerSecond, bits)
 
-class DataTest(unittest.TestCase):
-
-    maxDiff = None
+class DataTest(FskTest.FskTest):
 
     def test(self):
         testDataDir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "data")
@@ -90,7 +72,7 @@ class DataTest(unittest.TestCase):
             fskParams.spaceFrequency = 2400
             modulator = fskube.Modulator(fskParams)
             demodulator = fskube.Demodulator(fskParams)
-            c = Capturer()
+            c = self.createCapturer(fskube.boolReceiver)
             modulator.connect(demodulator)
             demodulator.connect(c)
 
@@ -116,7 +98,7 @@ class DataTest(unittest.TestCase):
                 c.reset()
                 for sample in left:
                     demodulator.receive(sample)
-                self.assertEqual(c.bits, correctBits)
+                self.assertEqual(c.data, correctBits)
             else:
                 c.reset()
                 for pair in data:
@@ -127,7 +109,7 @@ class DataTest(unittest.TestCase):
                     sample = float(index_sample[1])
                     demodulator.receive(sample)
                 demodulator.flush()
-                self.assertEqual(c.bits, correctBits)
+                self.assertEqual(c.data, correctBits)
             print("************ " + filename + " passed! **************")
 
 if __name__ == "__main__":
