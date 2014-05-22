@@ -24,7 +24,6 @@ class Capturer(fskube.boolReceiver):
             print("received a %s" % bit)
         self.bits.append(int(bit))
 
-@unittest.skip("<<<>>>")
 class RoundtripTest(unittest.TestCase):
     
     def doRoundtrip(self, samplesPerSecond, bits):
@@ -53,7 +52,6 @@ class RoundtripTest(unittest.TestCase):
         for samplesPerSecond in [ 48000, 44100, 16000 ]:
             self.doRoundtrip(samplesPerSecond, bits)
 
-@unittest.skip("<<<>>>")
 class DataTest(unittest.TestCase):
 
     maxDiff = None

@@ -11,6 +11,7 @@
 
 %copyctor fskube::StackmatState;
 
+/*
 %typemap(directorin) fskube::StackmatState {
     // Simulate C style pass by value semantics by constructing a new StackmatState object
     // on the heap and letting python's garbage collector manage the object. If we don't do this,
@@ -19,6 +20,7 @@
     fskube::StackmatState *copy = (fskube::StackmatState *)new fskube::StackmatState($1);
     $input = SWIG_NewPointerObj(SWIG_as_voidptr(copy), SWIGTYPE_p_fskube__StackmatState, SWIG_POINTER_OWN);
 }
+*/
 
 %template(boolReceiver) fskube::Receiver<bool>;
 %template(doubleReceiver) fskube::Receiver<double>;

@@ -53,6 +53,8 @@ class StackmatStateCapturer(fskube.stackmatstateReceiver):
         self.states = []
 
     def receive(self, state):
+        # state is on the stack of our caller, copy it into python's heap
+        state = fskube.StackmatState(state)
         if DEBUG:
             print("received a %s: %s, %s, %s" %
                     (state, state.commandByte, state.generation, state.millis))
