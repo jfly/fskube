@@ -8,8 +8,6 @@ import fskube
 DEBUG = True
 if DEBUG:
     os.environ["LOG_fskube"] = "*"
-else:
-    os.environ["LOG_fskube"] = ""
 
 class CharCapturer(fskube.intReceiver):
     def __init__(self):
