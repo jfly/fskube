@@ -10,6 +10,8 @@ import fskube
 DEBUG = False
 if DEBUG:
     os.environ["LOG_fskube"] = "*"
+else:
+    os.environ["LOG_fskube"] = ""
 
 class Capturer(fskube.boolReceiver):
     def __init__(self):
