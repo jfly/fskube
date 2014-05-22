@@ -1,6 +1,7 @@
 language: cpp
 
 before_install:
+    - ls /usr/include
     - sudo apt-get -qq install swig
 
 script:
@@ -9,7 +10,6 @@ script:
 
 compiler:
     - clang
-    - gcc
 
 # Have to whitelist gh-pages.
 # http://docs.travis-ci.com/user/build-configuration/#White--or-blacklisting-branches
