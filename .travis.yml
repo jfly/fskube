@@ -2,11 +2,10 @@ language: cpp
 
 before_install:
     - sudo apt-get -qq install swig python3-dev
-    - ls /usr/include
-    - which python3
 
 script:
     - make
+    - make py
     - make check
 
 compiler:

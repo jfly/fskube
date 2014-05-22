@@ -76,7 +76,9 @@ class StackmatTest(unittest.TestCase):
 
         for i, state in enumerate(capturer.states):
             sentState = sentStates[i]
-            self.assertEqual(state, sentState)
+            self.assertEqual(state.commandByte, sentState.commandByte)
+            self.assertEqual(state.generation, sentState.generation)
+            self.assertEqual(state.millis, sentState.millis)
 
 if __name__ == "__main__":
     unittest.main()
