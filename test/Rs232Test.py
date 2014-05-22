@@ -54,7 +54,8 @@ class StackmatStateCapturer(fskube.stackmatstateReceiver):
 
     def receive(self, state):
         if DEBUG:
-            print("received a %s" % state)
+            print("received a %s: %s, %s, %s" %
+                    (state, state.commandByte, state.generation, state.millis))
         self.states.append(state)
 
 class StackmatTest(unittest.TestCase):
