@@ -2,7 +2,8 @@ language: cpp
 
 before_install:
     - ls /usr/include
-    - sudo apt-get -qq install swig
+    - which python3
+    - sudo apt-get -qq install swig python3-dev
 
 script:
     - make
