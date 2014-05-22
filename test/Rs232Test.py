@@ -5,7 +5,7 @@ import unittest
 
 import fskube
 
-DEBUG = True
+DEBUG = False
 if DEBUG:
     os.environ["LOG_fskube"] = "*"
 

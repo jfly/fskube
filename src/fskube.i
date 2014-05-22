@@ -11,7 +11,7 @@
 
 %copyctor fskube::StackmatState;
 
-/*
+/* It looks like this is causing issues on swig 2 =(
 %typemap(directorin) fskube::StackmatState {
     // Simulate C style pass by value semantics by constructing a new StackmatState object
     // on the heap and letting python's garbage collector manage the object. If we don't do this,
