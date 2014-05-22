@@ -1,4 +1,4 @@
-fskube
+fskube [![Build Status](https://travis-ci.org/jfly/fskube.svg?branch=gh-pages)](https://travis-ci.org/jfly/fskube)
 ======
 
 A software modem with a web audio api demo.
