@@ -16,7 +16,7 @@ class Rs232Test(FskTest.FskTest):
         deRs232or.connect(capturer)
         
         secretMessage = "this is a message!"
-        for ch in "this is a message!":
+        for ch in secretMessage:
             rs232or.receive(ord(ch))
 
         receivedMessage = "".join(map(chr, capturer.data))
