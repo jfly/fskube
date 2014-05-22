@@ -5,7 +5,7 @@ import unittest
 
 import fskube
 
-DEBUG = False
+DEBUG = True
 if DEBUG:
     os.environ["LOG_fskube"] = "*"
 
@@ -74,11 +74,10 @@ class StackmatTest(unittest.TestCase):
             synthesizer.receive(state)
             sentStates.append(state)
 
-        for i, state in enumerate(capturer.states):
-            sentState = sentStates[i]
-            self.assertEqual(state.commandByte, sentState.commandByte)
-            self.assertEqual(state.generation, sentState.generation)
-            self.assertEqual(state.millis, sentState.millis)
+        for sentState, receivedState in zip(sentStates, capturer.states):
+            self.assertEqual(sentState.commandByte, receivedState.commandByte)
+            self.assertEqual(sentState.generation, receivedState.generation)
+            self.assertEqual(sentState.millis, receivedState.millis)
 
 if __name__ == "__main__":
     unittest.main()
