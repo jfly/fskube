@@ -6,7 +6,7 @@
 
 namespace fskube {
 
-#define LOG_HANDLE "fskube"
+LOG_HANDLE("fskube")
 
 Modulator::Modulator(FskParams fsk) : fsk(fsk) {
     reset();

@@ -3,20 +3,20 @@ import time
 import random
 import unittest
 
-randomSeed = os.environ.get('RANDOM_SEED')
+import fskube
+
+lh = fskube.LOG_HANDLE()
+
+RANDOM_SEED_ENV_VAR = 'RANDOM_SEED'
+randomSeed = os.environ.get(RANDOM_SEED_ENV_VAR)
 if randomSeed is None:
     randomSeed = str(int(time.time()))
-print("Setting random seed to {} (set RANDOM_SEED environment variable to override)".format(randomSeed))
+lh.log0("Setting random seed to {} (set {} "
+        "environment variable to override)".format(randomSeed, RANDOM_SEED_ENV_VAR))
 random.seed(randomSeed)
 
 class FskTest(unittest.TestCase):
     maxDiff = None
-
-    def __init__(self, *args, debug=False, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.debug = debug
-        if self.debug:
-            os.environ["LOG_fskube"] = "*"
 
     def createCapturer(self, capturerType):
         test = self
@@ -36,10 +36,6 @@ class FskTest(unittest.TestCase):
                 # but doesn't seem to work with swig2.
                 datum = type(datum)(datum)
 
-                test.log("received a %s" % datum)
+                lh.log4("received a %s" % datum)
                 self.data.append(datum)
         return Capturer()
-
-    def log(self, *args, **kwargs):
-        if self.debug:
-            print(*args, **kwargs)

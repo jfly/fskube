@@ -1,13 +1,18 @@
 %module(directors="1") fskube
 %feature("director");
 
+%include "carrays.i"
+%array_class(bool, boolArray);
+
 %{
 /* Includes the header in the wrapper code */
 #include "fskube.h"
+#include "logging.h"
 %}
 
 /* Parse the header file to generate wrappers */
 %include "receiversender.h"
+%include "logging.h"
 
 %copyctor fskube::StackmatState;
 
@@ -21,6 +26,27 @@
     $input = SWIG_NewPointerObj(SWIG_as_voidptr(copy), SWIGTYPE_p_fskube__StackmatState, SWIG_POINTER_OWN);
 }
 */
+
+%pythoncode %{
+import inspect
+class LOG_HANDLE(object):
+    def __init__(self, name=None):
+        if name is None:
+            callerFile = inspect.stack()[1][1]
+            name = inspect.getmoduleinfo(callerFile).name
+        lh = createLogHandle(name)  
+        self.lh = lh
+
+        def buildLog(level):
+            def log(*args, **kwargs):
+                if isLogLevelEnabled(lh, level):
+                    print("{}/{} ".format(lh.name, level), end="")
+                    print(*args, **kwargs)
+            return log
+            
+        for l in range(0, MAX_LOG_LEVEL + 1):
+            self.__setattr__("log{}".format(l), buildLog(l))
+%}
 
 %template(boolReceiver) fskube::Receiver<bool>;
 %template(doubleReceiver) fskube::Receiver<double>;

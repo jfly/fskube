@@ -8,10 +8,12 @@ import unittest
 import fskube
 import FskTest
 
+lh = fskube.LOG_HANDLE()
+
 class RoundtripTest(FskTest.FskTest):
     
     def doRoundtrip(self, samplesPerSecond, bits):
-        print("Roundtrip test at %shZ" % samplesPerSecond)
+        lh.log1("Roundtrip test at %shZ" % samplesPerSecond)
 
         fskParams = fskube.FskParams()
         fskParams.samplesPerSecond = samplesPerSecond
@@ -46,7 +48,7 @@ class DataTest(FskTest.FskTest):
 
         tests = sorted(filter(isTestData, os.listdir(testDataDir)))
         for filename in tests:
-            print("************ Testing " + filename + " **************")
+            lh.log1("************ Testing " + filename + " **************")
             inDataFilename = os.path.join(testDataDir, filename)
             with open(inDataFilename) as f:
                 data = f.read()
@@ -110,7 +112,7 @@ class DataTest(FskTest.FskTest):
                     demodulator.receive(sample)
                 demodulator.flush()
                 self.assertEqual(c.data, correctBits)
-            print("************ " + filename + " passed! **************")
+            lh.log1("************ " + filename + " passed! **************")
 
 if __name__ == "__main__":
     unittest.main()

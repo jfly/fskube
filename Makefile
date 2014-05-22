@@ -7,7 +7,7 @@ INC := -I/usr/include/python3.3m -I/usr/include/python3.2 -I$(SRC)
 
 CLOJURE_COMPILER := java -jar ~/thirdrepos/cc/compiler.jar 
 
-PYTHONWRAPPER_OBJS := $(BLD)/fskube.o $(BLD)/fskube_wrap.o
+PYTHONWRAPPER_OBJS := $(BLD)/fskube.o $(BLD)/fskube_wrap.o $(BLD)/logging.o
 
 # Create BLD and RELEASE directory if necessary
 $(shell mkdir -p $(BLD) $(RELEASE))
@@ -60,10 +60,10 @@ $(BLD)/fskube.py $(BLD)/fskube_wrap.cpp $(BLD)/fskube_wrap.h: $(BLD)/fskube.o $(
 	swig -builtin -python -c++ -o $(BLD)/fskube_wrap.cpp $(SRC)/fskube.i
 
 # Similar trick as above: fskube.js doesn't actually depend on
-# fskube.o, but every time fskube.o gets remade, fskube.js should be
-# remade as well.
-$(BLD)/fskube.js: $(BLD)/fskube.o $(SRC)/embind.cpp
-	em++ $(CFLAGS) --bind $(SRC)/embind.cpp $(SRC)/fskube.cpp -o $@
+# fskube.o/logging.o, but every time fskube.o/logging.o gets remade,
+# fskube.js should be remade as well.
+$(BLD)/fskube.js: $(BLD)/fskube.o $(BLD)/logging.o $(SRC)/embind.cpp
+	em++ $(CFLAGS) --bind $(SRC)/embind.cpp $(SRC)/fskube.cpp $(SRC)/logging.cpp -o $@
 
 $(BLD)/fskube.min.js: $(BLD)/fskube.js
 	$(CLOJURE_COMPILER) $^ --language_in ECMASCRIPT5 > $@

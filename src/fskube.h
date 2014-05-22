@@ -101,7 +101,7 @@ class DeRs232or : public Sender<bool, int> {
 struct StackmatState {
     unsigned int millis;
     unsigned int generation;
-    char commandByte;
+    unsigned char commandByte;
     bool operator==(StackmatState& o) const {
         return millis == o.millis && generation == o.generation && commandByte == o.commandByte;
     }

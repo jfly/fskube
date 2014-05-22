@@ -7,22 +7,42 @@
 
 // How to use the following macros:
 //
-//  #define LOG_HANDLE "testhandle"
+//  LOG_HANDLE("testhandle")
 //  LOG1("printf style formatting %d", 42);
 // 
-// To turn on log handle "testhandle", set the environment
-// variable LOG_testhandle to a subset of "1234", or to "*" to
-// enable all levels.
+// The environment variable FSKUBE_LOGGING controls what log
+// handles/levels are enabled. To enable foo/1, foo/2, and all
+// log levels for bar, set FSKUBE_LOGGING to "foo/12,bar/*".
+// Or, to enable all log levels for every handle, simply
+// set FSKUBE_LOGGING to "*".
+
+#define MAX_LOG_HANDLES 128
+#define MAX_LOG_HANDLE_LENGTH 20
+#define MAX_LOG_LEVEL 4
+
+struct LogHandle {
+    char name[MAX_LOG_HANDLE_LENGTH + 1];
+    bool levels[MAX_LOG_LEVEL + 1];
+};
+
+void readLogLevels(LogHandle *lh);
+void readLogLevels();
+LogHandle *createLogHandle(const char *logHandleName);
+
+inline bool isLogLevelEnabled(LogHandle *lh, int level) {
+    return level >= 0 && level <= MAX_LOG_LEVEL && lh->levels[level];
+}
+
+#define LOG_HANDLE(logHandleName) LogHandle *logHandle = createLogHandle(logHandleName);
 
 #define LOG(level, format, ...) \
 do { \
-    continue;/*<<< THE FOLLOWING IS VERY EXPENSIVE, OPTIMIZE >>>*/ \
-    char *logLevel = getenv("LOG_" LOG_HANDLE); \
-    if(true || (logLevel && (strchr(logLevel, '*') || strchr(logLevel, '0' + level)))) { \
-        printf("%s/%d " format "\n", LOG_HANDLE, level, ##__VA_ARGS__); \
+    if(isLogLevelEnabled(logHandle, level)) { \
+        printf("%s/%d " format "\n", logHandle->name, level, ##__VA_ARGS__); \
     } \
 } while(0);
 
+#define LOG0(...) LOG(0, ##__VA_ARGS__)
 #define LOG1(...) LOG(1, ##__VA_ARGS__)
 #define LOG2(...) LOG(2, ##__VA_ARGS__)
 #define LOG3(...) LOG(3, ##__VA_ARGS__)

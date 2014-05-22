@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import random
 import unittest
 
 import fskube
@@ -39,9 +40,12 @@ class StackmatTest(FskTest.FskTest):
         sentStates = []
         for i in range(100):
             state = fskube.StackmatState()
-            state.commandByte = '!'
-            state.millis = 9990
-            state.generation = 2
+            state.commandByte = random.randint(0, 255)
+            state.millis = random.randint(0, 10*60*1000)
+            state.generation = random.choice([2, 3])
+            if state.generation == 2:
+                # Zero out the thousandths place.
+                state.millis = state.millis - state.millis % 10
             synthesizer.receive(state)
             sentStates.append(state)
 
