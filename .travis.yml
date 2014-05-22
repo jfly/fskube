@@ -6,3 +6,9 @@ script:
 compiler:
     - clang
     - gcc
+
+# Have to whitelist gh-pages.
+# http://docs.travis-ci.com/user/build-configuration/#White--or-blacklisting-branches
+branches:
+    only:
+        - gh-pages
