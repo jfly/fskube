@@ -1,7 +1,11 @@
 language: cpp
 
+before_install:
+    - sudo apt-get -qq install swig
+
 script:
     - make
+    - make check
 
 compiler:
     - clang
