@@ -5,6 +5,13 @@
 <script src="scripts/bower_components/underscore/underscore.js"></script>
 <script src="scripts/bower_components/angular/angular.js"></script>
 
+<script>
+var Module = {
+    preRun: function() {
+        ENV.FSKUBE_LOGGING = "fskube/0";
+    }
+};
+</script>
 <script src="release/fskube.js"></script>
 <script src="scripts/main.js"></script>
 
