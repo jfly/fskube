@@ -5,19 +5,15 @@
 <script src="scripts/bower_components/underscore/underscore.js"></script>
 <script src="scripts/bower_components/angular/angular.js"></script>
 
-<script>
-var Module = {
-    preRun: function() {
-        ENV.FSKUBE_LOGGING = "fskube/0";
-    }
-};
-</script>
 <script src="release/fskube.js"></script>
 <script src="scripts/main.js"></script>
+<script>
+Module.setLogLevels('fsk/0');
+</script>
 
 <style>
 textarea {
-    width: 300px;
+    width: 250px;
     height: 200px;
 }
 .inbox {
@@ -37,9 +33,15 @@ textarea {
 <body ng-controller="MainCtrl">
 <h1>zero counting@{{sampleRate}}hZ</h1>
 
-<textarea ng-model="message"></textarea>
-<textarea ng-model="encodedMessage"></textarea>
-<button ng-click="play()">Play</button>
+<div class="outbox">
+    <stackmat state="stackmatState"></stackmat>
+
+    <textarea ng-model="rs232bytes"></textarea>
+
+    <textarea ng-model="eightN1bits"></textarea>
+
+    <button ng-click="play()">Play</button>
+</div>
 
 <hr>
 
@@ -50,15 +52,18 @@ Select input source
 
 <div class="inbox">
     <div ng-show="!hasMicrophone && source == 'Microphone'" class="inboxBlocker">Need microphone permission to receive!</div>
-    <textarea ng-model="receivedBits"></textarea>
-    <textarea readonly>{{receivedMessage()}}</textarea>
-    <ul>
-        <li ng-repeat="sampleFile in sampleFiles">
-            <a href="{{ sampleFile }}">{{ sampleFile }}</a>
-        </li>
-    </ul>
-</div>
 
+    <textarea ng-model="receivedBits"></textarea>
+
+    <textarea readonly>{{receivedMessage()}}</textarea>
+
+    <stackmat readonly="true" state="receivedStackmatState"></stackmat>
+</div>
+<ul>
+    <li ng-repeat="sampleFile in sampleFiles">
+        <a href="{{ sampleFile }}">{{ sampleFile }}</a>
+    </li>
+</ul>
 
 </body>
 </html>

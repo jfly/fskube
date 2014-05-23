@@ -8,13 +8,13 @@ namespace fskube {
 // Convert bytes <-> bits via 8-N-1
 // See http://en.wikipedia.org/wiki/8-N-1
 
-class Rs232or : public Sender<int, bool> {
+class Rs232Synthesizer : public Sender<int, bool> {
     public:
-        Rs232or();
+        Rs232Synthesizer();
         virtual void receive(int data);
 };
 
-class DeRs232or : public Sender<bool, int> {
+class Rs232Interpreter : public Sender<bool, int> {
     private:
         bool waitingForStart;
         unsigned int idleCount;
@@ -22,7 +22,7 @@ class DeRs232or : public Sender<bool, int> {
         unsigned char inProgressChar;
         unsigned int nthBit;
     public:
-        DeRs232or();
+        Rs232Interpreter();
         virtual void receive(bool b);
         void reset();
 };

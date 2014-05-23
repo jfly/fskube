@@ -9,9 +9,9 @@ function MainCtrl($scope, $timeout) {
     var onFrequency = 1200; // MARK
     var offFrequency = 2200; // SPACE
 
-    // TODO <<< need to pick a buffer size. This is a tradeoff
-    // between latency and dropping information. Maybe webworkers
-    // would let us turn this size down.
+    // The buffer size is a tradeoff between latency and dropping information.
+    // I'm not sure how to pick a good value here. Maybe webworkers would let
+    // us turn this size down.
     var bufferSize = 8192;
 
     // At something like 1200 baud (bits per second), we don't want to fire
@@ -20,65 +20,81 @@ function MainCtrl($scope, $timeout) {
     // only periodically flushing them to the angular-ed $scope.receivedBits.
     var MAX_SCREEN_UPDATE_RATE = 10; // updates per second
 
-    var rs232or = new Module.Rs232or();
+    var rs232synthesizer = new Module.Rs232Synthesizer();
     var rs232Listener = {
         bits: [],
         receive: function(bit) {
             this.bits.push(bit);
         }
     };
-    rs232or.connect(Module.boolReceiver.implement(rs232Listener));
+    rs232synthesizer.connect(Module.boolReceiver.implement(rs232Listener));
 
-    var deRs232or = new Module.DeRs232or();
+    var rs232interpreter = new Module.Rs232Interpreter();
     var deRs232Listener = {
         chars: [],
         receive: function(ch) {
             this.chars.push(String.fromCharCode(ch));
         }
     };
-    deRs232or.connect(Module.intReceiver.implement(deRs232Listener));
+    rs232interpreter.connect(Module.intReceiver.implement(deRs232Listener));
 
-    function encode(message) {
+    function encode(rs232bytes) {
         var bits = "";
-        for(var i = 0; i < message.length; i++) {
+        for(var i = 0; i < rs232bytes.length; i++) {
             rs232Listener.bits.length = 0;
-            rs232or.receive(message.charCodeAt(i));
+            rs232synthesizer.receive(rs232bytes.charCodeAt(i));
             bits += rs232Listener.bits.map(function(bit) { return bit ? "1" : "0"; }).join("");
             bits += " ";
         }
         return bits.trim();
     }
-    function decode(encodedMessage) {
-        deRs232or.reset();
+    function decode(eightN1bits) {
+        rs232interpreter.reset();
         deRs232Listener.chars.length = 0;
-        var paddedBits = encodedMessage.replace(/[^01]/g, "");
+        var paddedBits = eightN1bits.replace(/[^01]/g, "");
         for(var i = 0; i < paddedBits.length; i++) {
             var bit = paddedBits[i] == "0" ? 0 : 1;
-            deRs232or.receive(bit);
+            rs232interpreter.receive(bit);
         }
         return deRs232Listener.chars.join("");
     }
 
-    var message = "Hello, world!";
-    var encodedMessage = null;
-    Object.defineProperty($scope, "message", {
+    var stackmatState = {
+        commandByte: "!",
+        generation: "2",
+        millis: "0"
+    };
+    var rs232bytes = "Hello, world!";
+    var eightN1bits = null;
+    Object.defineProperty($scope, "stackmatState", {
         get: function() {
-            return message === null ? decode(encodedMessage) : message;
+        }
+    });
+    Object.defineProperty($scope, "rs232bytes", {
+        get: function() {
+            return rs232bytes === null ? decode(eightN1bits) : rs232bytes;
         },
         set: function(newMessage) {
-            encodedMessage = null;
-            message = newMessage;
+            eightN1bits = null;
+            rs232bytes = newMessage;
         }
     });
-    Object.defineProperty($scope, "encodedMessage", {
+    Object.defineProperty($scope, "eightN1bits", {
         get: function() {
-            return encodedMessage === null ? encode(message) : encodedMessage;
+            return eightN1bits === null ? encode(rs232bytes) : eightN1bits;
         },
         set: function(newEncodedMessage) {
-            encodedMessage = newEncodedMessage;
-            message = null;
+            eightN1bits = newEncodedMessage;
+            rs232bytes = null;
+            stackmatState = null;
         }
     });
+
+    $scope.receivedStackmatState = {
+        commandByte: "!",
+        generation: "3",
+        millis: "0"
+    };
 
     var audioContext = new AudioContext();
     audioContext.createScriptProcessor = audioContext.createScriptProcessor ||audioContext.createJavaScriptNode;
@@ -127,7 +143,7 @@ function MainCtrl($scope, $timeout) {
     modulator.connect(modulatorListener);
 
     $scope.play = function() {
-        var bits = $scope.encodedMessage.replace(/ /g, "").split("").map(function(b) { return parseInt(b); });
+        var bits = $scope.eightN1bits.replace(/ /g, "").split("").map(function(b) { return parseInt(b); });
         modulatedSignal.length = 0;
         modulator.reset();
         bits.forEach(function(bit) {
@@ -255,3 +271,18 @@ var app = angular.module('modemTestModule', []).config([
         $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|blob):/);
     }
 ]);
+
+
+app.directive('stackmat', function() {
+    return {
+        restrict: 'E',
+        scope: {
+            state: "=",
+            readonly: "="
+        },
+        template: '<span style="display: inline-block"><label><input type="text" ng-readonly="readonly" size="7" maxlength="7" ng-model="state.millis"></input>millis</label>' +
+        '<input type="text" ng-readonly="readonly" size="1" maxlength="1" ng-model="state.commandByte"></input><br>' +
+        '<label><input type="radio" ng-disabled="readonly" ng-model="state.generation" value="2">gen2</label>' +
+        '<label><input type="radio" ng-disabled="readonly" ng-model="state.generation" value="3">gen3</label></span>'
+    };
+});

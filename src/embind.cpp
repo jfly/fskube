@@ -80,13 +80,13 @@ EMSCRIPTEN_BINDINGS(my_module) {
         .function("flush", &Demodulator::flush)
         ;
 
-    class_<Rs232or, base<Sender<int, bool>>>("Rs232or")
+    class_<Rs232Synthesizer, base<Sender<int, bool>>>("Rs232Synthesizer")
         .constructor()
         ;
 
-    class_<DeRs232or, base<Sender<bool, int>>>("DeRs232or")
+    class_<Rs232Interpreter, base<Sender<bool, int>>>("Rs232Interpreter")
         .constructor()
-        .function("reset", &DeRs232or::reset)
+        .function("reset", &Rs232Interpreter::reset)
         ;
 }
 

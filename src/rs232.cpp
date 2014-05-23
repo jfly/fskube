@@ -5,9 +5,9 @@ namespace fskube {
 
 LOG_HANDLE("rs232")
 
-Rs232or::Rs232or() {}
+Rs232Synthesizer::Rs232Synthesizer() {}
 
-void Rs232or::receive(int data) {
+void Rs232Synthesizer::receive(int data) {
     if(data < 0) {
         // Send our "idle" signal (low) for a good little while.
         for(int j = 0; j < 8*3; j++) {
@@ -29,17 +29,17 @@ void Rs232or::receive(int data) {
     }
 }
 
-DeRs232or::DeRs232or() {
+Rs232Interpreter::Rs232Interpreter() {
     reset();
 }
 
-void DeRs232or::reset() {
+void Rs232Interpreter::reset() {
     waitingForStart = true;
     idleCount = 0;
     inProgressChar = 0;
 }
 
-void DeRs232or::receive(bool b) {
+void Rs232Interpreter::receive(bool b) {
     if(waitingForStart) {
         if(b == 1) {
             waitingForStart = false;

@@ -10,21 +10,21 @@ import FskTest
 class Rs232Test(FskTest.FskTest):
     def test(self):
         capturer = self.createCapturer(fskube.intReceiver)
-        rs232or = fskube.Rs232or()
-        deRs232or = fskube.DeRs232or()
-        rs232or.connect(deRs232or)
-        deRs232or.connect(capturer)
+        rs232synthesizer = fskube.Rs232Synthesizer()
+        rs232interpreter = fskube.Rs232Interpreter()
+        rs232synthesizer.connect(rs232interpreter)
+        rs232interpreter.connect(capturer)
         
         secretMessage = "this is a message!"
         for ch in secretMessage:
-            rs232or.receive(ord(ch))
+            rs232synthesizer.receive(ord(ch))
 
         receivedMessage = "".join(map(chr, capturer.data))
         self.assertEqual(receivedMessage, secretMessage)
 
         capturer.reset()
         # Send an idle, we expect to receive >= 1 idles.
-        rs232or.receive(-1)
+        rs232synthesizer.receive(-1)
         self.assertGreaterEqual(len(capturer.data), 1)
         for ch in capturer.data:
             self.assertEqual(ch, -1)
