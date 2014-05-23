@@ -5,18 +5,19 @@
 %array_class(bool, boolArray);
 
 %{
-/* Includes the header in the wrapper code */
-#include "fskube.h"
+#include "fsk.h"
+#include "rs232.h"
+#include "stackmat.h"
 #include "logging.h"
 %}
 
-/* Parse the header file to generate wrappers */
 %include "receiversender.h"
 %include "logging.h"
 
 %copyctor fskube::StackmatState;
 
-/* It looks like this is causing issues on swig 2 =(
+/*
+It looks like this is causing issues on swig 2 =(
 %typemap(directorin) fskube::StackmatState {
     // Simulate C style pass by value semantics by constructing a new StackmatState object
     // on the heap and letting python's garbage collector manage the object. If we don't do this,
@@ -60,4 +61,6 @@ class LOG_HANDLE(object):
 %template(stackmatstateReceiver_intSender) fskube::Sender<fskube::StackmatState, int>;
 %template(intReceiver_stackmatstateSender) fskube::Sender<int, fskube::StackmatState>;
 
-%include "fskube.h"
+%include "fsk.h"
+%include "rs232.h"
+%include "stackmat.h"

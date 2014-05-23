@@ -3,16 +3,19 @@ SRC := src
 RELEASE := release
 CXX := clang++
 CFLAGS := -Wall -std=c++11 -Wno-c++11-narrowing 
-INC := -I/usr/include/python3.3m -I/usr/include/python3.2 -I$(SRC)
+PYTHON_INC := -I/usr/include/python3.3m -I/usr/include/python3.2
+INC := -I$(SRC)
 
-PYTHONWRAPPER_OBJS := $(BLD)/fskube.o $(BLD)/fskube_wrap.o $(BLD)/logging.o
+FSKUBE_SRCS := $(BLD)/fsk.cpp $(BLD)/rs232.cpp $(BLD)/stackmat.cpp $(BLD)/logging.cpp
+FSKUBE_OBJS := $(FSKUBE_SRCS:.cpp=.o)
+PYTHONWRAPPER_OBJS := $(FSKUBE_OBJS) $(BLD)/fskube_wrap.o
 
 # Create BLD and RELEASE directory if necessary
 $(shell mkdir -p $(BLD) $(RELEASE))
 
 .PHONY: all py js jsmin check clean serve release
 
-default: $(BLD)/fskube.o
+default: $(FSKUBE_OBJS)
         
 all: default py js jsmin
 
@@ -29,7 +32,7 @@ jsmin: $(BLD)/fskube.min.js
 -include $(PYTHONWRAPPER_OBJS:.o=.d)
 
 $(BLD)/_fskube.so: $(PYTHONWRAPPER_OBJS)
-	$(CXX) -shared $(CFLAGS) $(INC) $^ -o $@
+	$(CXX) -shared $^ -o $@
 
 $(RELEASE)/fskube.js: $(BLD)/fskube.js
 	cp $^ $@
@@ -48,23 +51,18 @@ $(BLD)/%.cpp: $(SRC)/%.cpp
 .PRECIOUS: $(BLD)/%.cpp
 
 $(BLD)/%.o: $(BLD)/%.cpp
-	$(CXX) -c -fPIC $(CFLAGS) $(INC) $< -o $@
-	$(CXX) -MM -MT $(BLD)/$*.o $(CFLAGS) $(INC) $< > $(BLD)/$*.d
+	$(CXX) -c -fPIC $(CFLAGS) $(INC) $(PYTHON_INC) $< -o $@
+	$(CXX) -MM -MT $(BLD)/$*.o $(CFLAGS) $(INC) $(PYTHON_INC) $< > $(BLD)/$*.d
 
-# These targets don't actually depend on fskube.o, but they
-# should get remade whenever fskube.o is remade, so it's listed
-# as a dependency.
-$(BLD)/fskube.py $(BLD)/fskube_wrap.cpp $(BLD)/fskube_wrap.h: $(BLD)/fskube.o $(SRC)/fskube.i
+$(BLD)/fskube.py $(BLD)/fskube_wrap.cpp $(BLD)/fskube_wrap.h: $(FSKUBE_SRCS) $(SRC)/fskube.i
 	swig -builtin -python -c++ -o $(BLD)/fskube_wrap.cpp $(SRC)/fskube.i
 
-# Similar trick as above: fskube.js doesn't actually depend on
-# fskube.o/logging.o, but every time fskube.o/logging.o gets remade,
-# fskube.js should be remade as well.
-$(BLD)/fskube.js: $(BLD)/fskube.o $(BLD)/logging.o $(SRC)/embind.cpp $(SRC)/wrap_c.js
-	em++ $(CFLAGS) --bind $(SRC)/embind.cpp $(SRC)/fskube.cpp $(SRC)/logging.cpp -s EXPORTED_FUNCTIONS="['_getLogLevels', '_setLogLevels']" --post-js $(SRC)/wrap_c.js -o $@
+# Similar dependency trick as above.
+$(BLD)/fskube.js: $(FSKUBE_SRCS) $(SRC)/embind.cpp $(SRC)/wrap_c.js
+	em++ $(CFLAGS) $(INC) --bind $(SRC)/embind.cpp $(FSKUBE_SRCS) -s EXPORTED_FUNCTIONS="['_getLogLevels', '_setLogLevels']" --post-js $(SRC)/wrap_c.js -o $@
 
-$(BLD)/fskube.min.js: $(BLD)/fskube.o $(BLD)/logging.o $(SRC)/embind.cpp $(SRC)/wrap_c.js
-	em++ --bind $(SRC)/embind.cpp $(SRC)/fskube.cpp $(SRC)/logging.cpp -s EXPORTED_FUNCTIONS="['_getLogLevels', '_setLogLevels']" --closure 1 -O3 --post-js $(SRC)/wrap_c.js -o $@
+$(BLD)/fskube.min.js: $(FSKUBE_SRCS) $(SRC)/embind.cpp $(SRC)/wrap_c.js
+	em++ $(CFLAGS) $(INC) --bind $(SRC)/embind.cpp $(FSKUBE_SRCS) -s EXPORTED_FUNCTIONS="['_getLogLevels', '_setLogLevels']" --post-js $(SRC)/wrap_c.js -o $@ --closure 1 -O3
 
 check: py
 	PYTHONPATH=$(BLD) python3 -m unittest discover -s test/ -p *Test.py

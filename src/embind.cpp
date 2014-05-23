@@ -1,5 +1,7 @@
 #include <emscripten/bind.h>
-#include "fskube.h"
+#include "fsk.h"
+#include "rs232.h"
+#include "stackmat.h"
 #include "logging.h"
 
 using namespace emscripten;

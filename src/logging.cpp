@@ -7,7 +7,7 @@ static unsigned int nextLogHandleId = 0;
 #define MAX_LOG_HANDLE_DESC_LENGTH (MAX_LOG_HANDLE_LENGTH + 1 + (MAX_LOG_LEVEL + 1))
 static char logLevels[MAX_LOG_HANDLES * (MAX_LOG_HANDLE_DESC_LENGTH + 1) + 1];
 
-const char *LOGGING_ENV_VAR = "FSKUBE_LOGGING";
+static const char *LOGGING_ENV_VAR = "FSKUBE_LOGGING";
 
 void readLogLevels(LogHandle *lh) {
     // First, disable all log levels
