@@ -1,5 +1,6 @@
 #include <emscripten/bind.h>
 #include "fskube.h"
+#include "logging.h"
 
 using namespace emscripten;
 

@@ -3,7 +3,6 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 
 function MainCtrl($scope, $timeout) {
-    // TODO <<< make bps, onFreq, offFreq, bufferSize(?) configurable
     // DS8500 HART modem
     // http://datasheets.maximintegrated.com/en/ds/DS8500.pdf
     var bitsPerSecond = 1200;
@@ -250,10 +249,9 @@ function MainCtrl($scope, $timeout) {
 }
 
 // Allow blob links.
-var app = angular.module( 'modemTestModule', [] ).config( [
+var app = angular.module('modemTestModule', []).config([
     '$compileProvider',
-    function( $compileProvider )
-    {   
+    function($compileProvider) {   
         $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|blob):/);
     }
 ]);

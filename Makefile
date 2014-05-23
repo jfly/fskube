@@ -2,10 +2,8 @@ BLD := bld
 SRC := src
 RELEASE := release
 CXX := clang++
-CFLAGS := -Wall -g -std=c++11 -Wno-c++11-narrowing 
+CFLAGS := -Wall -std=c++11 -Wno-c++11-narrowing 
 INC := -I/usr/include/python3.3m -I/usr/include/python3.2 -I$(SRC)
-
-CLOJURE_COMPILER := java -jar ~/thirdrepos/cc/compiler.jar 
 
 PYTHONWRAPPER_OBJS := $(BLD)/fskube.o $(BLD)/fskube_wrap.o $(BLD)/logging.o
 
@@ -62,11 +60,11 @@ $(BLD)/fskube.py $(BLD)/fskube_wrap.cpp $(BLD)/fskube_wrap.h: $(BLD)/fskube.o $(
 # Similar trick as above: fskube.js doesn't actually depend on
 # fskube.o/logging.o, but every time fskube.o/logging.o gets remade,
 # fskube.js should be remade as well.
-$(BLD)/fskube.js: $(BLD)/fskube.o $(BLD)/logging.o $(SRC)/embind.cpp
-	em++ $(CFLAGS) --bind $(SRC)/embind.cpp $(SRC)/fskube.cpp $(SRC)/logging.cpp -o $@
+$(BLD)/fskube.js: $(BLD)/fskube.o $(BLD)/logging.o $(SRC)/embind.cpp $(SRC)/wrap_c.js
+	em++ $(CFLAGS) --bind $(SRC)/embind.cpp $(SRC)/fskube.cpp $(SRC)/logging.cpp -s EXPORTED_FUNCTIONS="['_getLogLevels', '_setLogLevels']" --post-js $(SRC)/wrap_c.js -o $@
 
-$(BLD)/fskube.min.js: $(BLD)/fskube.js
-	$(CLOJURE_COMPILER) $^ --language_in ECMASCRIPT5 > $@
+$(BLD)/fskube.min.js: $(BLD)/fskube.o $(BLD)/logging.o $(SRC)/embind.cpp $(SRC)/wrap_c.js
+	em++ --bind $(SRC)/embind.cpp $(SRC)/fskube.cpp $(SRC)/logging.cpp -s EXPORTED_FUNCTIONS="['_getLogLevels', '_setLogLevels']" --closure 1 -O3 --post-js $(SRC)/wrap_c.js -o $@
 
 check: py
 	PYTHONPATH=$(BLD) python3 -m unittest discover -s test/ -p *Test.py
