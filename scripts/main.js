@@ -30,13 +30,13 @@ function MainCtrl($scope, $timeout) {
     rs232synthesizer.connect(Module.boolReceiver.implement(rs232Listener));
 
     var rs232interpreter = new Module.Rs232Interpreter();
-    var deRs232Listener = {
+    var bytesListener = {
         chars: [],
         receive: function(ch) {
             this.chars.push(String.fromCharCode(ch));
         }
     };
-    rs232interpreter.connect(Module.intReceiver.implement(deRs232Listener));
+    rs232interpreter.connect(Module.intReceiver.implement(bytesListener));
 
     function encode(rs232bytes) {
         var bits = "";
@@ -50,13 +50,13 @@ function MainCtrl($scope, $timeout) {
     }
     function decode(eightN1bits) {
         rs232interpreter.reset();
-        deRs232Listener.chars.length = 0;
+        bytesListener.chars.length = 0;
         var paddedBits = eightN1bits.replace(/[^01]/g, "");
         for(var i = 0; i < paddedBits.length; i++) {
             var bit = paddedBits[i] == "0" ? 0 : 1;
             rs232interpreter.receive(bit);
         }
-        return deRs232Listener.chars.join("");
+        return bytesListener.chars.join("");
     }
 
     var stackmatState = {
@@ -68,20 +68,34 @@ function MainCtrl($scope, $timeout) {
     var eightN1bits = null;
     Object.defineProperty($scope, "stackmatState", {
         get: function() {
+            return stackmatState;
+        },
+        set: function(newState) {
+            eightN1bits = null;
+            rs232bytes = null;
+            stackmatState = newState;
         }
     });
     Object.defineProperty($scope, "rs232bytes", {
         get: function() {
-            return rs232bytes === null ? decode(eightN1bits) : rs232bytes;
+            // TODO <<< use StackmatSynthesizer here >>>
+            if($scope.stackmatState !== null) {
+                return "\n" + JSON.stringify($scope.stackmatState);
+            }
+            return rs232bytes;
         },
         set: function(newMessage) {
             eightN1bits = null;
             rs232bytes = newMessage;
+            stackmatState = null;
         }
     });
     Object.defineProperty($scope, "eightN1bits", {
         get: function() {
-            return eightN1bits === null ? encode(rs232bytes) : eightN1bits;
+            if($scope.rs232bytes !== null) {
+                return encode($scope.rs232bytes);
+            }
+            return eightN1bits;
         },
         set: function(newEncodedMessage) {
             eightN1bits = newEncodedMessage;
@@ -89,12 +103,6 @@ function MainCtrl($scope, $timeout) {
             stackmatState = null;
         }
     });
-
-    $scope.receivedStackmatState = {
-        commandByte: "!",
-        generation: "3",
-        millis: "0"
-    };
 
     var audioContext = new AudioContext();
     audioContext.createScriptProcessor = audioContext.createScriptProcessor ||audioContext.createJavaScriptNode;
@@ -108,9 +116,8 @@ function MainCtrl($scope, $timeout) {
     var modulator = new Module.Modulator(fskParams);
     var demodulator = new Module.Demodulator(fskParams);
     $scope.receivedBits = '';
-    $scope.receivedMessage = function() {
-        return decode($scope.receivedBits);
-    };
+    $scope.receivedMessage = null;
+    $scope.receivedStackmatState = null;
     var pendingBitPusher = null;
     var batchedBits = [];
     function bitPusher() {
@@ -123,6 +130,17 @@ function MainCtrl($scope, $timeout) {
             $scope.receivedBits += (bit ? "1" : "0");
         }
         batchedBits.length = 0;
+
+        $scope.receivedMessage = decode($scope.receivedBits);
+
+        try {
+            var lines = $scope.receivedMessage.split("\n");
+            var lastLine = lines[lines.length - 1];
+            // TODO <<< use StackmatInterpreter here >>>
+            $scope.receivedStackmatState = JSON.parse(lastLine);
+        } catch(e) {
+            $scope.receivedStackmatState = null;
+        }
     }
     var bitListener = Module.boolReceiver.implement({
         receive: function(bit) {
@@ -260,6 +278,8 @@ function MainCtrl($scope, $timeout) {
     $scope.clear = function() {
         $scope.savingSamples = false;
         $scope.receivedBits = '';
+        $scope.receivedMessage = null;
+        $scope.receivedStackmatState = null;
         batchedBits = [];
     };
 }
