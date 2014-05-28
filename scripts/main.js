@@ -20,6 +20,10 @@ function MainCtrl($scope, $timeout) {
     // only periodically flushing them to the angular-ed $scope.receivedBits.
     var MAX_SCREEN_UPDATE_RATE = 10; // updates per second
 
+    function fastMode() {
+        return document.location.hash.toLowerCase().indexOf("fast") >= 0;
+    }
+
     function toStringJson(str) {
         var charStr = JSON.stringify(str);
         // remove start and end quotes
@@ -39,7 +43,9 @@ function MainCtrl($scope, $timeout) {
     var bytesListener = {
         chars: [],
         receive: function(ch) {
-            this.chars.push(String.fromCharCode(ch));
+            if(!fastMode()) {
+                this.chars.push(String.fromCharCode(ch));
+            }
             stackmatInterpreter.receive(ch);
         }
     };
@@ -146,6 +152,9 @@ function MainCtrl($scope, $timeout) {
     var demodulator = new Module.Demodulator(fskParams);
     $scope.receivedBits = '';
     $scope.receivedMessageJson = function() {
+        if(fastMode()) {
+            return "FAST MODE";
+        }
         return toStringJson(bytesListener.chars.join(""));
     };
     $scope.receivedStackmatState = null;
@@ -162,6 +171,9 @@ function MainCtrl($scope, $timeout) {
             $scope.receivedBits += (bit ? "1" : "0");
         }
         batchedBits.length = 0;
+        if(fastMode()) {
+            $scope.receivedBits = "FAST MODE";
+        }
     }
     var bitListener = Module.boolReceiver.implement({
         receive: function(bit) {
