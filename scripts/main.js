@@ -20,6 +20,12 @@ function MainCtrl($scope, $timeout) {
     // only periodically flushing them to the angular-ed $scope.receivedBits.
     var MAX_SCREEN_UPDATE_RATE = 10; // updates per second
 
+    function toStringJson(str) {
+        var charStr = JSON.stringify(str);
+        // remove start and end quotes
+        return charStr.substring(1, charStr.length - 1)
+    }
+
     var rs232synthesizer = new Module.Rs232Synthesizer();
     var rs232Listener = {
         bits: [],
@@ -34,29 +40,28 @@ function MainCtrl($scope, $timeout) {
         chars: [],
         receive: function(ch) {
             this.chars.push(String.fromCharCode(ch));
+            stackmatInterpreter.receive(ch);
         }
     };
     rs232interpreter.connect(Module.intReceiver.implement(bytesListener));
 
-    function encode(rs232bytes) {
+    function encode(rs232BytesJson) {
         var bits = "";
-        for(var i = 0; i < rs232bytes.length; i++) {
-            rs232Listener.bits.length = 0;
-            rs232synthesizer.receive(rs232bytes.charCodeAt(i));
-            bits += rs232Listener.bits.map(function(bit) { return bit ? "1" : "0"; }).join("");
+        for(var i = 0; i < rs232BytesJson.length; i++) {
+            if(rs232BytesJson.charCodeAt(i) >= 255) {
+                // send an idle!
+                var IDLE_LENGTH = 10;
+                for(var i = 0; i < IDLE_LENGTH; i++) {
+                    bits += "0";
+                }
+            } else {
+                rs232Listener.bits.length = 0;
+                rs232synthesizer.receive(rs232BytesJson.charCodeAt(i));
+                bits += rs232Listener.bits.map(function(bit) { return bit ? "1" : "0"; }).join("");
+            }
             bits += " ";
         }
         return bits.trim();
-    }
-    function decode(eightN1bits) {
-        rs232interpreter.reset();
-        bytesListener.chars.length = 0;
-        var paddedBits = eightN1bits.replace(/[^01]/g, "");
-        for(var i = 0; i < paddedBits.length; i++) {
-            var bit = paddedBits[i] == "0" ? 0 : 1;
-            rs232interpreter.receive(bit);
-        }
-        return bytesListener.chars.join("");
     }
 
     var stackmatState = {
@@ -64,7 +69,7 @@ function MainCtrl($scope, $timeout) {
         generation: "2",
         millis: "0"
     };
-    var rs232bytes = "Hello, world!";
+    var rs232BytesJson = "Hello, world!";
     var eightN1bits = null;
     Object.defineProperty($scope, "stackmatState", {
         get: function() {
@@ -72,34 +77,49 @@ function MainCtrl($scope, $timeout) {
         },
         set: function(newState) {
             eightN1bits = null;
-            rs232bytes = null;
+            rs232BytesJson = null;
             stackmatState = newState;
         }
     });
-    Object.defineProperty($scope, "rs232bytes", {
+
+    var stackmatSynthesizer = new Module.StackmatSynthesizer();
+    var stackmatCharsReceiver = {
+        chars: [],
+        receive: function(ch) {
+            this.chars.push(ch);
+        }
+    };
+    stackmatSynthesizer.connect(Module.intReceiver.implement(stackmatCharsReceiver));
+    Object.defineProperty($scope, "rs232BytesJson", {
         get: function() {
-            // TODO <<< use StackmatSynthesizer here >>>
             if($scope.stackmatState !== null) {
-                return "\n" + JSON.stringify($scope.stackmatState);
+                var stackmatState = {};
+                stackmatState.generation = parseInt($scope.stackmatState.generation || 2);
+                stackmatState.millis = parseInt($scope.stackmatState.millis || 0);
+                stackmatState.commandByte = ($scope.stackmatState.commandByte || " ").charCodeAt(0);
+                stackmatCharsReceiver.chars.length = 0;
+                stackmatSynthesizer.receive(stackmatState);
+                var chars = stackmatCharsReceiver.chars.map(function(ch) { return String.fromCharCode(ch); }).join("");
+                return toStringJson(chars);
             }
-            return rs232bytes;
+            return rs232BytesJson;
         },
         set: function(newMessage) {
             eightN1bits = null;
-            rs232bytes = newMessage;
+            rs232BytesJson = newMessage;
             stackmatState = null;
         }
     });
     Object.defineProperty($scope, "eightN1bits", {
         get: function() {
-            if($scope.rs232bytes !== null) {
-                return encode($scope.rs232bytes);
+            if($scope.rs232BytesJson !== null) {
+                return encode(JSON.parse('"' + $scope.rs232BytesJson + '"'));
             }
             return eightN1bits;
         },
         set: function(newEncodedMessage) {
             eightN1bits = newEncodedMessage;
-            rs232bytes = null;
+            rs232BytesJson = null;
             stackmatState = null;
         }
     });
@@ -107,6 +127,15 @@ function MainCtrl($scope, $timeout) {
     var audioContext = new AudioContext();
     audioContext.createScriptProcessor = audioContext.createScriptProcessor ||audioContext.createJavaScriptNode;
     $scope.sampleRate = audioContext.sampleRate;
+
+    var stackmatInterpreter = new Module.StackmatInterpreter();
+    var stackmatReceiver = {
+        receive: function(state) {
+            state.commandByte = String.fromCharCode(state.commandByte);
+            $scope.receivedStackmatState = state;
+        }
+    };
+    stackmatInterpreter.connect(Module.stackmatstateReceiver.implement(stackmatReceiver));
 
     var fskParams = {};
     fskParams.samplesPerSecond = audioContext.sampleRate;
@@ -116,7 +145,9 @@ function MainCtrl($scope, $timeout) {
     var modulator = new Module.Modulator(fskParams);
     var demodulator = new Module.Demodulator(fskParams);
     $scope.receivedBits = '';
-    $scope.receivedMessage = null;
+    $scope.receivedMessageJson = function() {
+        return toStringJson(bytesListener.chars.join(""));
+    };
     $scope.receivedStackmatState = null;
     var pendingBitPusher = null;
     var batchedBits = [];
@@ -127,20 +158,10 @@ function MainCtrl($scope, $timeout) {
             if(($scope.receivedBits.length + 1) % 11 == 0) {
                 $scope.receivedBits += " ";
             }
+            rs232interpreter.receive(bit);
             $scope.receivedBits += (bit ? "1" : "0");
         }
         batchedBits.length = 0;
-
-        $scope.receivedMessage = decode($scope.receivedBits);
-
-        try {
-            var lines = $scope.receivedMessage.split("\n");
-            var lastLine = lines[lines.length - 1];
-            // TODO <<< use StackmatInterpreter here >>>
-            $scope.receivedStackmatState = JSON.parse(lastLine);
-        } catch(e) {
-            $scope.receivedStackmatState = null;
-        }
     }
     var bitListener = Module.boolReceiver.implement({
         receive: function(bit) {
@@ -278,9 +299,11 @@ function MainCtrl($scope, $timeout) {
     $scope.clear = function() {
         $scope.savingSamples = false;
         $scope.receivedBits = '';
-        $scope.receivedMessage = null;
         $scope.receivedStackmatState = null;
         batchedBits = [];
+        stackmatInterpreter.reset();
+        rs232interpreter.reset();
+        bytesListener.chars.length = 0;
     };
 }
 

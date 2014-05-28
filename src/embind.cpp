@@ -29,12 +29,25 @@ struct intReceiverWrapper : public wrapper<Receiver<int>> {
     }
 };
 
+struct stackmatstateReceiverWrapper : public wrapper<Receiver<StackmatState>> {
+    EMSCRIPTEN_WRAPPER(stackmatstateReceiverWrapper);
+    void receive(StackmatState s) {
+        return call<void>("receive", s);
+    }
+};
+
 EMSCRIPTEN_BINDINGS(my_module) {
     value_object<FskParams>("FskParams")
         .field("samplesPerSecond", &FskParams::samplesPerSecond)
         .field("bitsPerSecond", &FskParams::bitsPerSecond)
         .field("markFrequency", &FskParams::markFrequency)
         .field("spaceFrequency", &FskParams::spaceFrequency)
+        ;
+
+    value_object<StackmatState>("StackmatState")
+        .field("millis", &StackmatState::millis)
+        .field("generation", &StackmatState::generation)
+        .field("commandByte", &StackmatState::commandByte)
         ;
 
     // TODO - the documentation https://github.com/kripken/emscripten/wiki/embind
@@ -54,6 +67,11 @@ EMSCRIPTEN_BINDINGS(my_module) {
         .allow_subclass<intReceiverWrapper>("intReceiverWrapper")
         ;
 
+    class_<Receiver<StackmatState>>("stackmatstateReceiver")
+        .function("receive", &Receiver<StackmatState>::receive)
+        .allow_subclass<stackmatstateReceiverWrapper>("stackmatstateReceiverWrapper")
+        ;
+
     class_<Sender<bool, double>, base<Receiver<bool>>>("boolReceiver_doubleSender")
         .function("connect", &Sender<bool, double>::connect, allow_raw_pointers())
         ;
@@ -68,6 +86,14 @@ EMSCRIPTEN_BINDINGS(my_module) {
 
     class_<Sender<bool, int>, base<Receiver<bool>>>("boolReceiver_intSender")
         .function("connect", &Sender<bool, int>::connect, allow_raw_pointers())
+        ;
+
+    class_<Sender<int, StackmatState>, base<Receiver<int>>>("intReceiver_stackmatstateSender")
+        .function("connect", &Sender<int, StackmatState>::connect, allow_raw_pointers())
+        ;
+
+    class_<Sender<StackmatState, int>, base<Receiver<StackmatState>>>("stackmatstateReceiver_intSender")
+        .function("connect", &Sender<StackmatState, int>::connect, allow_raw_pointers())
         ;
 
     class_<Modulator, base<Sender<bool, double>>>("Modulator")
@@ -87,6 +113,15 @@ EMSCRIPTEN_BINDINGS(my_module) {
     class_<Rs232Interpreter, base<Sender<bool, int>>>("Rs232Interpreter")
         .constructor()
         .function("reset", &Rs232Interpreter::reset)
+        ;
+
+    class_<StackmatSynthesizer, base<Sender<StackmatState, int>>>("StackmatSynthesizer")
+        .constructor()
+        ;
+
+    class_<StackmatInterpreter, base<Sender<int, StackmatState>>>("StackmatInterpreter")
+        .constructor()
+        .function("reset", &StackmatInterpreter::reset)
         ;
 }
 

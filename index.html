@@ -36,7 +36,7 @@ textarea {
 <div class="outbox">
     <stackmat state="stackmatState"></stackmat>
 
-    <textarea ng-model="rs232bytes"></textarea>
+    <textarea ng-model="rs232BytesJson"></textarea>
 
     <textarea ng-model="eightN1bits"></textarea>
 
@@ -53,9 +53,9 @@ Select input source
 <div class="inbox">
     <div ng-show="!hasMicrophone && source == 'Microphone'" class="inboxBlocker">Need microphone permission to receive!</div>
 
-    <textarea ng-model="receivedBits"></textarea>
+    <textarea readonly>{{receivedBits}}</textarea>
 
-    <textarea readonly>{{receivedMessage}}</textarea>
+    <textarea readonly>{{receivedMessageJson()}}</textarea>
 
     <stackmat readonly="true" state="receivedStackmatState"></stackmat>
 </div>
