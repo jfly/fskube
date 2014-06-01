@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <math.h>
 #include <cmath>
 #include "fsk.h"
@@ -30,9 +31,15 @@ void Modulator::receive(bool bit) {
     }
 }
 
+Demodulator::Demodulator() {}
 
-Demodulator::Demodulator(FskParams fsk) : fsk(fsk) {
+Demodulator::Demodulator(FskParams fsk) {
+    setFskParams(fsk);
     reset();
+}
+
+void Demodulator::setFskParams(FskParams fsk) {
+    this->fsk = fsk;
 }
 
 void Demodulator::reset() {
@@ -59,6 +66,8 @@ template <typename T> int sgn(T val) {
 }
 
 void Demodulator::receive(double value) {
+    assert(value <= 1.0);
+    assert(value >= -1.0);
     sampleIndex++;
     LOG4("Demodulator::receive(%f) sampleIndex: %llu", value, sampleIndex);
 

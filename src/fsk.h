@@ -65,7 +65,9 @@ class Demodulator : public Sender<double, bool> {
         void addZeroCrossing(Sample sample);
         void addFrequencyHalfSeen(unsigned int frequency);
     public:
+        Demodulator();
         Demodulator(FskParams fsk);
+        void setFskParams(FskParams fsk);
         virtual void receive(double value);
         void flush();
 };

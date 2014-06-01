@@ -98,7 +98,13 @@ class DataTest(FskTest.FskTest):
                         right = out
 
                 c.reset()
+                minsample = -(2**(8*wav.getsampwidth()))
+                maxsample = -minsample - 1
                 for sample in left:
+                    if sample >= 0:
+                        sample = (1.0*sample) / maxsample
+                    else:
+                        sample = - (1.0*sample) / minsample
                     demodulator.receive(sample)
                 self.assertEqual(c.data, correctBits)
             else:
