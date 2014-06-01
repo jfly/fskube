@@ -119,6 +119,8 @@ void Demodulator::receive(double value) {
     lastSignificantSample = sample;
 }
 
+#define ABS(a) ((a) >= 0 ? (a) : -(a))
+
 /**
  * Given the index at which a zero crossing occurred, determine
  * the current frequency of the signal.
@@ -137,8 +139,8 @@ void Demodulator::addZeroCrossing(Sample sample) {
         double spaceCrossingTime = 0.5/fsk.spaceFrequency;
         double markRatio = crossingTimeDelta / markCrossingTime;
         double spaceRatio = crossingTimeDelta / spaceCrossingTime;
-        double distanceToMark = std::abs(markRatio - 1);
-        double distanceToSpace = std::abs(spaceRatio - 1);
+        double distanceToMark = ABS(markRatio - 1);
+        double distanceToSpace = ABS(spaceRatio - 1);
         LOG1("Zero crossing of duration %f seconds", crossingTimeDelta);
         LOG1("distanceToMark: %f distanceToSpace: %f",
                 distanceToMark, distanceToSpace);

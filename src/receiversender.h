@@ -20,8 +20,11 @@ template <class InType, class OutType> class Sender : public Receiver<InType> {
             }
         }
     private:
-        Receiver<OutType> *nextReceiver = 0;
+        Receiver<OutType> *nextReceiver;
     public:
+        Sender() {
+            nextReceiver = 0;
+        }
         virtual ~Sender() {};
         void connect(Receiver<OutType> *next) {
             nextReceiver = next;

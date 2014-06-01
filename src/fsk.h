@@ -49,8 +49,8 @@ class Demodulator : public Sender<double, bool> {
         // Histeresis to avoid issues if the signal wavers around zero.
         // See nexus5helloworld for an example of some noise around zero at the
         // start of transmission.
-        double highThreshold = 0.4;
-        double lowThreshold = -0.4;
+        static constexpr double highThreshold = 0.4;
+        static constexpr double lowThreshold = -0.4;
 
         unsigned long long sampleIndex;
         Sample lastZeroCrossing;
