@@ -43,14 +43,15 @@ struct Sample {
     bool valid;
 };
 
+// Histeresis to avoid issues if the signal wavers around zero.
+// See nexus5helloworld for an example of some noise around zero at the
+// start of transmission.
+#define FSK_HIGH_THRESHOLD 0.4
+#define FSK_LOW_THRESHOLD -0.4
+
 class Demodulator : public Sender<double, bool> {
     private:
         FskParams fsk;
-        // Histeresis to avoid issues if the signal wavers around zero.
-        // See nexus5helloworld for an example of some noise around zero at the
-        // start of transmission.
-        static constexpr double highThreshold = 0.4;
-        static constexpr double lowThreshold = -0.4;
 
         unsigned long long sampleIndex;
         Sample lastZeroCrossing;

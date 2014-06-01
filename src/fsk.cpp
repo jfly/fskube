@@ -67,8 +67,8 @@ void Demodulator::receive(double value) {
     sample.value = value;
     sample.valid = true;
 
-    bool isHigh = value >= highThreshold;
-    bool isLow = value <= lowThreshold;
+    bool isHigh = value >= FSK_HIGH_THRESHOLD;
+    bool isLow = value <= FSK_LOW_THRESHOLD;
     if(!isHigh && !isLow) {
         insignificantSampleCount++;
         if(insignificantSampleCount > fsk.samplesPerBit()) {
