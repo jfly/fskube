@@ -1,0 +1,69 @@
+<html ng-app="modemTestModule">
+<head>
+<meta name="viewport" content="width=device-width" />
+
+<script src="scripts/bower_components/underscore/underscore.js"></script>
+<script src="scripts/bower_components/angular/angular.js"></script>
+
+<script src="release/fskube.js"></script>
+<script src="scripts/main.js"></script>
+<script>
+Module.setLogLevels('fsk/0');
+</script>
+
+<style>
+textarea {
+    width: 250px;
+    height: 200px;
+}
+.inbox {
+    position: relative;
+}
+.inboxBlocker {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: red;
+    text-align: center;
+    font-size: 5em;
+}
+</style>
+</head>
+
+<body ng-controller="MainCtrl">
+<h1>zero counting@{{sampleRate}}hZ</h1>
+
+<div class="outbox">
+    <stackmat state="stackmatState"></stackmat>
+
+    <textarea ng-model="rs232BytesJson"></textarea>
+
+    <textarea ng-model="eightN1bits"></textarea>
+
+    <button ng-click="play()">Play</button>
+</div>
+
+<hr>
+
+Select input source
+<select ng-model="source" ng-options="s group by 'Choose input' for s in sources"></select>
+<button id="clear" ng-click="clear()">Clear</button>
+<button id="saveSamples" ng-click="saveSamples()">{{ savingSamples ? "Stop saving samples" : "Save samples to blob" }}</button>
+
+<div class="inbox">
+    <div ng-show="!hasMicrophone && source == 'Microphone'" class="inboxBlocker">Need microphone permission to receive!</div>
+
+    <textarea readonly>{{receivedBits}}</textarea>
+
+    <textarea readonly>{{receivedMessageJson()}}</textarea>
+
+    <stackmat readonly="true" state="receivedStackmatState"></stackmat>
+</div>
+<ul>
+    <li ng-repeat="sampleFile in sampleFiles">
+        <a href="{{ sampleFile }}">{{ sampleFile }}</a>
+    </li>
+</ul>
+
+</body>
+</html>

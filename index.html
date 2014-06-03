@@ -1,69 +1,69 @@
-<html ng-app="modemTestModule">
+<html>
 <head>
+
 <meta name="viewport" content="width=device-width" />
 
-<script src="scripts/bower_components/underscore/underscore.js"></script>
-<script src="scripts/bower_components/angular/angular.js"></script>
+<link href='lcd.css' rel='stylesheet' type='text/css'>
+<style>
+   body {
+       background: black;
+   }
+   .container {
+       top: 0;
+       bottom: 0;
+       left: 0;
+       right: 0;
+       position: absolute;
+       text-align: center;
+       color: red;
+       font-family: lcd;
+   }
+</style>
 
-<script src="release/fskube.js"></script>
-<script src="scripts/main.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+<script src="https://cdn.rawgit.com/davatron5000/FitText.js/master/jquery.fittext.js"></script>
+<script src="release/stackmat.js"></script>
+ 
 <script>
-Module.setLogLevels('fsk/0');
+
+function msToClock(ms) {
+    var div = Math.floor(ms/1000);
+    var min = Math.floor(div/60);
+    var sec = div%60;
+    var mils = Math.floor((ms%1000)/10);
+    return min + ":" + digitify(sec) + "." + digitify(mils);
+}
+
+function digitify(n) {
+    n %= 100;
+    return n > 9 ? "" + n: "0" + n;
+}
+
+$(document).ready(function() {
+    var timeArea = document.getElementById("timeArea");
+
+    Stackmat.initialize("release/fskube.js");
+    Stackmat.onstackmatstate = function(state) {
+        if(state.on) {
+            $("#counter").text(msToClock(state.millis));
+        } else {
+            $("#counter").text("");
+        }
+    };
+
+    // This doesn't deal well with very long and thin viewports (we'll get a
+    // vertical scrollbar), but oh well.
+    $("#counter").fitText(0.6);
+});
+
 </script>
 
-<style>
-textarea {
-    width: 250px;
-    height: 200px;
-}
-.inbox {
-    position: relative;
-}
-.inboxBlocker {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background-color: red;
-    text-align: center;
-    font-size: 5em;
-}
-</style>
 </head>
-
-<body ng-controller="MainCtrl">
-<h1>zero counting@{{sampleRate}}hZ</h1>
-
-<div class="outbox">
-    <stackmat state="stackmatState"></stackmat>
-
-    <textarea ng-model="rs232BytesJson"></textarea>
-
-    <textarea ng-model="eightN1bits"></textarea>
-
-    <button ng-click="play()">Play</button>
+ 
+<body>
+<div class="container">
+    <div id="counter"></div>
 </div>
-
-<hr>
-
-Select input source
-<select ng-model="source" ng-options="s group by 'Choose input' for s in sources"></select>
-<button id="clear" ng-click="clear()">Clear</button>
-<button id="saveSamples" ng-click="saveSamples()">{{ savingSamples ? "Stop saving samples" : "Save samples to blob" }}</button>
-
-<div class="inbox">
-    <div ng-show="!hasMicrophone && source == 'Microphone'" class="inboxBlocker">Need microphone permission to receive!</div>
-
-    <textarea readonly>{{receivedBits}}</textarea>
-
-    <textarea readonly>{{receivedMessageJson()}}</textarea>
-
-    <stackmat readonly="true" state="receivedStackmatState"></stackmat>
-</div>
-<ul>
-    <li ng-repeat="sampleFile in sampleFiles">
-        <a href="{{ sampleFile }}">{{ sampleFile }}</a>
-    </li>
-</ul>
-
 </body>
+
 </html>
