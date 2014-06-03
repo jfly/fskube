@@ -26,17 +26,18 @@
  
 <script>
 
-function msToClock(ms) {
+function msToClock(ms, showMillis) {
     var div = Math.floor(ms/1000);
     var min = Math.floor(div/60);
     var sec = div%60;
-    var mils = Math.floor((ms%1000)/10);
-    return min + ":" + digitify(sec) + "." + digitify(mils);
+    var mils = Math.floor(ms%1000);
+    return min + ":" + pad(sec, 2) + "." + (showMillis ? pad(mils, 3) : pad(mils/10, 2));
 }
 
-function digitify(n) {
-    n %= 100;
-    return n > 9 ? "" + n: "0" + n;
+// from http://stackoverflow.com/a/10074204
+function pad(num, size) {
+    if (num.toString().length >= size) return num;
+    return ( Math.pow( 10, size ) + Math.floor(num) ).toString().substring( 1 );
 }
 
 $(document).ready(function() {
@@ -45,7 +46,7 @@ $(document).ready(function() {
     Stackmat.initialize("release/fskube.js");
     Stackmat.onstackmatstate = function(state) {
         if(state.on) {
-            $("#counter").text(msToClock(state.millis));
+            $("#counter").text(msToClock(state.millis, state.generation == 3));
         } else {
             $("#counter").text("");
         }

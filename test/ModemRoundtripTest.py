@@ -88,8 +88,6 @@ class DataTest(FskTest.FskTest):
                     nframes = wav.getnframes()
                     frames = wav.readframes(nframes * nchannels)
                     out = struct.unpack_from("%dh" % nframes * nchannels, frames)
- 
-                    # Convert 2 channles to numpy arrays
                     if nchannels == 2:
                         left = out[0::2]
                         right = out[1::2]

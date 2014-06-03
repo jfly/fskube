@@ -55,7 +55,9 @@ void Demodulator::reset() {
 void Demodulator::flush() {
     LOG2("flush() lastFrequencyHalfSeenCount %d lastFrequencyHalfSeen %d", lastFrequencyHalfSeenCount, lastFrequencyHalfSeen);
     if(lastFrequencyHalfSeen > 0) {
-        send(fsk.frequencyToBit(lastFrequencyHalfSeen));
+        bool bit = fsk.frequencyToBit(lastFrequencyHalfSeen);
+        LOG2("sending bit %d", bit);
+        send(bit);
     }
     reset();
 }
@@ -151,8 +153,9 @@ void Demodulator::addZeroCrossing(Sample sample) {
         double distanceToMark = ABS(markRatio - 1);
         double distanceToSpace = ABS(spaceRatio - 1);
         LOG1("Zero crossing of duration %f seconds", crossingTimeDelta);
-        LOG1("distanceToMark: %f distanceToSpace: %f",
-                distanceToMark, distanceToSpace);
+        LOG1("distanceToMark: %f distanceToSpace: %f abs(distanceToMark - distanceToSpace) = %f",
+                distanceToMark, distanceToSpace, ABS(distanceToMark - distanceToSpace));
+
         if(distanceToMark < distanceToSpace) {
             addFrequencyHalfSeen(fsk.markFrequency);
         } else {
@@ -178,6 +181,7 @@ void Demodulator::addFrequencyHalfSeen(unsigned int frequency) {
         lastFrequencyHalfSeenCount++;
         if(lastFrequencyHalfSeenCount >= halfPeriodsPerBit) {
             bool bit = fsk.frequencyToBit(lastFrequencyHalfSeen);
+            LOG2("sending bit %d", bit);
             send(bit);
             lastFrequencyHalfSeenCount = 0;
         }
@@ -190,6 +194,7 @@ void Demodulator::addFrequencyHalfSeen(unsigned int frequency) {
             // the frequency we just saw was straddled between 2 bits,
             // and we don't want to count it towards our next bit.
             bool bit = fsk.frequencyToBit(lastFrequencyHalfSeen);
+            LOG2("sending bit %d", bit);
             send(bit);
             lastFrequencyHalfSeen = frequency;
             lastFrequencyHalfSeenCount = 0;
