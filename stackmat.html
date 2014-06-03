@@ -1,0 +1,23 @@
+<html>
+<head>
+<script src="release/stackmat.js"></script>
+<script>
+(function() {
+"use strict";
+
+window.addEventListener("load", function() {
+    var timeArea = document.getElementById("timeArea");
+
+    Stackmat.initialize("release/fskube.js");
+    Stackmat.onstackmatstate = function(state) {
+        timeArea.innerHTML = state.millis;
+    };
+});
+
+})();
+</script>
+</head>
+<body>
+<div id="timeArea"></div>
+</body>
+</html>

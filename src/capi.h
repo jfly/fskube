@@ -1,14 +1,18 @@
 #ifndef CAPI_H
 #define CAPI_H
 
+extern "C" {
+
 #include "stackmat.h"
 
-void *fskube_initialize();
+// Note that this api only supports interpreting one stackmat at a time.
+// This seems fine to me.
+void fskube_initialize(unsigned int sampleRate);
 
-void fskube_destroy(void *fskube);
+bool fskube_addSample(double sample);
 
-bool fskube_addSample(void *fskube);
+fskube::StackmatState fskube_getState();
 
-fskube::StackmatState fskube_getState(void * fskube);
+}
 
 #endif // CAPI_H

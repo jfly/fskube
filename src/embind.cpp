@@ -3,6 +3,7 @@
 #include "rs232.h"
 #include "stackmat.h"
 #include "logging.h"
+#include "capi.h"
 
 using namespace emscripten;
 
@@ -49,6 +50,11 @@ EMSCRIPTEN_BINDINGS(my_module) {
         .field("generation", &StackmatState::generation)
         .field("commandByte", &StackmatState::commandByte)
         ;
+
+    function("fskube_initialize", &fskube_initialize);
+    function("fskube_addSample", &fskube_addSample);
+    function("fskube_getState", &fskube_getState);
+
 
     // TODO - the documentation https://github.com/kripken/emscripten/wiki/embind
     // is missing the required argument to allow_subclass.
