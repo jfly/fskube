@@ -103,6 +103,7 @@ function MainCtrl($scope, $timeout) {
                 stackmatState.generation = parseInt($scope.stackmatState.generation || 2);
                 stackmatState.millis = parseInt($scope.stackmatState.millis || 0);
                 stackmatState.commandByte = ($scope.stackmatState.commandByte || " ").charCodeAt(0);
+                stackmatState.on = true;
                 stackmatCharsReceiver.chars.length = 0;
                 stackmatSynthesizer.receive(stackmatState);
                 var chars = stackmatCharsReceiver.chars.map(function(ch) { return String.fromCharCode(ch); }).join("");
