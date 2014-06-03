@@ -49,6 +49,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
         .field("millis", &StackmatState::millis)
         .field("generation", &StackmatState::generation)
         .field("commandByte", &StackmatState::commandByte)
+        .field("on", &StackmatState::on)
         ;
 
     function("fskube_initialize", &fskube_initialize);

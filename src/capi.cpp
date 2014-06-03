@@ -5,6 +5,9 @@
 #include "rs232.h"
 #include "stackmat.h"
 #include "capi.h"
+#include "logging.h"
+
+LOG_HANDLE("capi")
 
 using namespace fskube;
 
@@ -26,6 +29,8 @@ static Rs232Interpreter rs232Interpreter;
 static StackmatInterpreter stackmatInterpreter;
 static StackmatStateReceiver stackmatStateReceiver;
 static bool initialized = false;
+static unsigned int samplesWithoutData = 0;
+static unsigned int samplesUntilOff;
 
 void fskube_initialize(unsigned int sampleRate) {
     FskParams fsk;
@@ -39,6 +44,8 @@ void fskube_initialize(unsigned int sampleRate) {
     rs232Interpreter.connect(&stackmatInterpreter);
     stackmatInterpreter.connect(&stackmatStateReceiver);
 
+    // Half a second without data is long enough to declare the timer "off"
+    samplesUntilOff = sampleRate / 2;
     initialized = true;
 }
 
@@ -46,7 +53,19 @@ bool fskube_addSample(double sample) {
     assert(initialized);
     stackmatStateReceiver.receivedSomething = false;
     demodulator.receive(sample);
-    return stackmatStateReceiver.receivedSomething;
+    if(stackmatStateReceiver.receivedSomething) {
+        samplesWithoutData = 0;
+        return true;
+    } else {
+        samplesWithoutData++;
+        // Only notify once about going idle, rather than repeatedly.
+        if(samplesWithoutData == samplesUntilOff) {
+            LOG1("seen %d samples without data, assuming stackmat is off or unlugged", samplesUntilOff);
+            stackmatStateReceiver.state = StackmatState();
+            return true;
+        }
+        return false;
+    }
 }
 
 StackmatState fskube_getState() {

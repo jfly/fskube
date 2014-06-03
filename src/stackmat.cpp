@@ -103,6 +103,7 @@ void StackmatInterpreter::receive(int byte) {
                     state.millis += (receivedBytes[6] - '0');
                 }
 
+                state.on = true;
                 send(state);
                 receivedBytesLength = 0;
                 break;

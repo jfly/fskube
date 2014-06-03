@@ -13,6 +13,7 @@ namespace fskube {
 #define LARGESTSIGNAL_BYTES GEN3SIGNAL_BYTES
 
 struct StackmatState {
+    bool on;
     unsigned int millis;
     unsigned int generation;
     unsigned char commandByte;
