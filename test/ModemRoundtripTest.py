@@ -59,19 +59,21 @@ class DataTest(FskTest.FskTest):
                 correctBits = list(map(int, correctBits.replace(" ", "")))
 
             headerData = header[1:].strip().split(" ")
-            def parseFrequency(freq):
-                return int(headerData[0].lower().replace("hz", ""))
-            samplesPerSecond = parseFrequency(headerData[0])
-            onFrequency = parseFrequency(headerData[1])
+            def parseInt(freq, suffix):
+                return int(freq.lower().replace(suffix.lower(), ""))
+            samplesPerSecond = parseInt(headerData[0], suffix="Hz")
+            onFrequency = parseInt(headerData[1], suffix="Hz")
             assert onFrequency
-            offFrequency = parseFrequency(headerData[2])
+            offFrequency = parseInt(headerData[2], suffix="Hz")
             assert offFrequency
+            bitsPerSecond = parseInt(headerData[3], suffix="bps")
+            assert bitsPerSecond
 
             fskParams = fskube.FskParams()
             fskParams.samplesPerSecond = samplesPerSecond
-            fskParams.bitsPerSecond = 1200
-            fskParams.markFrequency = 1200
-            fskParams.spaceFrequency = 2400
+            fskParams.bitsPerSecond = bitsPerSecond
+            fskParams.markFrequency = onFrequency
+            fskParams.spaceFrequency = offFrequency
             modulator = fskube.Modulator(fskParams)
             demodulator = fskube.Demodulator(fskParams)
             c = self.createCapturer(fskube.boolReceiver)
@@ -96,13 +98,14 @@ class DataTest(FskTest.FskTest):
                         right = out
 
                 c.reset()
-                minsample = -(2**(8*wav.getsampwidth()))
+                minsample = -(2**(8*wav.getsampwidth() - 1))
                 maxsample = -minsample - 1
-                for sample in left:
+                for index, sample in enumerate(left):
                     if sample >= 0:
                         sample = (1.0*sample) / maxsample
                     else:
                         sample = - (1.0*sample) / minsample
+                    lh.log2("%s: %s" % (index, sample))
                     demodulator.receive(sample)
                 self.assertEqual(c.data, correctBits)
             else:
