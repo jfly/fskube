@@ -90,22 +90,42 @@ void StackmatInterpreter::receive(int byte) {
                 } else {
                     assert(false);
                 }
-                state.commandByte = receivedBytes[0];
+                int i = 0;
+                state.commandByte = receivedBytes[i++];
+
+                int minuteDigit = (receivedBytes[i++] - '0');
+                int tensSecondsDigit = (receivedBytes[i++] - '0');
+                int onesSecondsDigit = (receivedBytes[i++] - '0');
+                int tenthsDigit = (receivedBytes[i++] - '0');
+                int hundredthsDigit = (receivedBytes[i++] - '0');
+                int thousandthsDigit;
+                if(state.generation == 3) {
+                    thousandthsDigit = (receivedBytes[i++] - '0');
+                } else {
+                    thousandthsDigit = 0;
+                }
+                char checksum = receivedBytes[i++];
+                char cr = receivedBytes[i++];
+                char lf = receivedBytes[i++];
 
                 state.millis = 0;
-                state.millis += (receivedBytes[1] - '0') * MILLIS_PER_MINUTE;
-
-                int seconds = 10 * (receivedBytes[2] - '0') + (receivedBytes[3] - '0');
+                state.millis += minuteDigit * MILLIS_PER_MINUTE;
+                int seconds = 10 * tensSecondsDigit + onesSecondsDigit;
                 state.millis += seconds * MILLIS_PER_SECOND;
-                state.millis += (receivedBytes[4] - '0') * MILLIS_PER_DECISECOND;
-                state.millis += (receivedBytes[5] - '0') * MILLIS_PER_CENTISECOND;
-                if(state.generation == 3) {
-                    state.millis += (receivedBytes[6] - '0');
-                }
+                state.millis += tenthsDigit * MILLIS_PER_DECISECOND;
+                state.millis += hundredthsDigit * MILLIS_PER_CENTISECOND;
+                state.millis += thousandthsDigit;
 
-                state.on = true;
-                send(state);
+                char computedChecksum = 64 + minuteDigit + tensSecondsDigit +
+                    onesSecondsDigit + tenthsDigit + hundredthsDigit +
+                    thousandthsDigit;
+                bool valid = (computedChecksum == checksum) && (cr == '\r') && (lf == '\n');
+
                 receivedBytesLength = 0;
+                if(valid) {
+                    state.on = true;
+                    send(state);
+                }
                 break;
             }
             default:
