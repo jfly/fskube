@@ -30,6 +30,7 @@ It looks like this is causing issues on swig 2 =(
 
 %pythoncode %{
 import inspect
+import sys
 class LOG_HANDLE(object):
     def __init__(self, name=None):
         if name is None:
@@ -41,8 +42,10 @@ class LOG_HANDLE(object):
         def buildLog(level):
             def log(*args, **kwargs):
                 if isLogLevelEnabled(lh, level):
-                    print("{}/{} ".format(lh.name, level), end="")
+                    print("{}/{} ".format(lh.name, level), end="", file=sys.stderr)
+                    kwargs['file'] = sys.stderr
                     print(*args, **kwargs)
+                    sys.stderr.flush()
             return log
             
         for l in range(0, MAX_LOG_LEVEL + 1):

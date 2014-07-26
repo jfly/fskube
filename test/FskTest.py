@@ -19,7 +19,6 @@ class FskTest(unittest.TestCase):
     maxDiff = None
 
     def createCapturer(self, capturerType):
-        test = self
         class Capturer(capturerType):
             def __init__(self):
                 super().__init__()

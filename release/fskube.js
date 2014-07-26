@@ -10566,10 +10566,10 @@ function __ZN6fskube11Demodulator7receiveEd($this,$value) {
 function __ZN6fskube11Demodulator20addFrequencyHalfSeenEj($this,$frequency) {
  $this = $this|0;
  $frequency = $frequency|0;
- var $$pre = 0, $0 = 0, $1 = 0, $10 = 0, $11 = 0, $12 = 0, $13 = 0, $14 = 0, $15 = 0, $16 = 0.0, $17 = 0.0, $18 = 0.0, $19 = 0.0, $2 = 0, $20 = 0.0, $21 = 0.0, $22 = 0, $23 = 0, $24 = 0, $25 = 0;
+ var $$pre = 0, $0 = 0, $1 = 0, $10 = 0, $11 = 0, $12 = 0, $13 = 0, $14 = 0, $15 = 0, $16 = 0, $17 = 0.0, $18 = 0, $19 = 0, $2 = 0, $20 = 0.0, $21 = 0.0, $22 = 0.0, $23 = 0.0, $24 = 0.0, $25 = 0;
  var $26 = 0, $27 = 0, $28 = 0, $29 = 0, $3 = 0, $30 = 0, $31 = 0, $32 = 0, $33 = 0, $34 = 0, $35 = 0, $36 = 0, $37 = 0, $38 = 0, $39 = 0, $4 = 0, $40 = 0, $41 = 0, $42 = 0, $43 = 0;
- var $44 = 0, $45 = 0, $46 = 0, $47 = 0, $48 = 0, $49 = 0, $5 = 0, $50 = 0, $51 = 0, $52 = 0, $53 = 0, $54 = 0, $55 = 0, $56 = 0, $57 = 0, $58 = 0, $59 = 0, $6 = 0, $7 = 0, $8 = 0;
- var $9 = 0, $vararg_buffer = 0, $vararg_buffer11 = 0, $vararg_buffer16 = 0, $vararg_ptr10 = 0, $vararg_ptr14 = 0, $vararg_ptr15 = 0, $vararg_ptr19 = 0, $vararg_ptr20 = 0, $vararg_ptr7 = 0, $vararg_ptr8 = 0, $vararg_ptr9 = 0, label = 0, sp = 0;
+ var $44 = 0, $45 = 0, $46 = 0, $47 = 0, $48 = 0, $49 = 0, $5 = 0, $50 = 0, $51 = 0, $52 = 0, $53 = 0, $54 = 0, $55 = 0, $56 = 0, $57 = 0, $6 = 0, $7 = 0, $8 = 0, $9 = 0, $vararg_buffer = 0;
+ var $vararg_buffer11 = 0, $vararg_buffer16 = 0, $vararg_ptr10 = 0, $vararg_ptr14 = 0, $vararg_ptr15 = 0, $vararg_ptr19 = 0, $vararg_ptr20 = 0, $vararg_ptr7 = 0, $vararg_ptr8 = 0, $vararg_ptr9 = 0, label = 0, sp = 0;
  sp = STACKTOP;
  STACKTOP = STACKTOP + 64|0;
  $vararg_buffer16 = sp + 40|0;
@@ -10610,21 +10610,21 @@ function __ZN6fskube11Demodulator20addFrequencyHalfSeenEj($this,$frequency) {
   $12 = $$pre;
  }
  $13 = ($12|0)==($frequency|0);
+ $14 = (($this) + 92|0);
+ $15 = HEAP32[$14>>2]|0;
  if ($13) {
-  $14 = (($this) + 12|0);
-  $15 = HEAP32[$14>>2]|0;
-  $16 = (+($15>>>0));
-  $17 = 1.0 / $16;
-  $18 = (+($12>>>0));
-  $19 = $17 * $18;
-  $20 = $19 * 2.0;
-  $21 = (+_rint((+$20)));
-  $22 = (~~(($21))>>>0);
-  $23 = (($this) + 92|0);
-  $24 = HEAP32[$23>>2]|0;
-  $25 = (($24) + 1)|0;
-  HEAP32[$23>>2] = $25;
-  $26 = ($25>>>0)<($22>>>0);
+  $16 = (($15) + 1)|0;
+  HEAP32[$14>>2] = $16;
+  $17 = (+($frequency>>>0));
+  $18 = (($this) + 12|0);
+  $19 = HEAP32[$18>>2]|0;
+  $20 = (+($19>>>0));
+  $21 = 1.0 / $20;
+  $22 = $21 * $17;
+  $23 = $22 * 2.0;
+  $24 = (+_rint((+$23)));
+  $25 = (~~(($24))>>>0);
+  $26 = ($16>>>0)<($25>>>0);
   if ($26) {
    STACKTOP = sp;return;
   }
@@ -10654,45 +10654,43 @@ function __ZN6fskube11Demodulator20addFrequencyHalfSeenEj($this,$frequency) {
    $41 = HEAP32[$40>>2]|0;
    FUNCTION_TABLE_vii[$41 & 255]($37,$29);
   }
-  HEAP32[$23>>2] = 0;
+  HEAP32[$14>>2] = 0;
   STACKTOP = sp;return;
  }
- $42 = (($this) + 92|0);
- $43 = HEAP32[$42>>2]|0;
- $44 = ($43|0)==(0);
- if ($44) {
+ $42 = ($15|0)==(0);
+ if ($42) {
   HEAP32[$0>>2] = $frequency;
-  HEAP32[$42>>2] = 1;
+  HEAP32[$14>>2] = 1;
   STACKTOP = sp;return;
  }
- $45 = (($this) + 16|0);
- $46 = HEAP32[$45>>2]|0;
- $47 = ($46|0)==($12|0);
- $48 = HEAP32[4800>>2]|0;
- $49 = (($48) + 23|0);
- $50 = HEAP8[$49>>0]|0;
- $51 = $50 & 1;
- $52 = ($51<<24>>24)==(0);
- if (!($52)) {
-  $53 = $47&1;
-  HEAP32[$vararg_buffer16>>2] = $48;
+ $43 = (($this) + 16|0);
+ $44 = HEAP32[$43>>2]|0;
+ $45 = ($44|0)==($12|0);
+ $46 = HEAP32[4800>>2]|0;
+ $47 = (($46) + 23|0);
+ $48 = HEAP8[$47>>0]|0;
+ $49 = $48 & 1;
+ $50 = ($49<<24>>24)==(0);
+ if (!($50)) {
+  $51 = $45&1;
+  HEAP32[$vararg_buffer16>>2] = $46;
   $vararg_ptr19 = (($vararg_buffer16) + 4|0);
   HEAP32[$vararg_ptr19>>2] = 2;
   $vararg_ptr20 = (($vararg_buffer16) + 8|0);
-  HEAP32[$vararg_ptr20>>2] = $53;
+  HEAP32[$vararg_ptr20>>2] = $51;
   (_printf((4936|0),($vararg_buffer16|0))|0);
  }
- $54 = (($this) + 4|0);
- $55 = HEAP32[$54>>2]|0;
- $56 = ($55|0)==(0|0);
- if (!($56)) {
-  $57 = HEAP32[$55>>2]|0;
-  $58 = (($57) + 8|0);
-  $59 = HEAP32[$58>>2]|0;
-  FUNCTION_TABLE_vii[$59 & 255]($55,$47);
+ $52 = (($this) + 4|0);
+ $53 = HEAP32[$52>>2]|0;
+ $54 = ($53|0)==(0|0);
+ if (!($54)) {
+  $55 = HEAP32[$53>>2]|0;
+  $56 = (($55) + 8|0);
+  $57 = HEAP32[$56>>2]|0;
+  FUNCTION_TABLE_vii[$57 & 255]($53,$45);
  }
  HEAP32[$0>>2] = $frequency;
- HEAP32[$42>>2] = 0;
+ HEAP32[$14>>2] = 0;
  STACKTOP = sp;return;
 }
 function __ZN6fskube9ModulatorD1Ev($this) {
@@ -11466,7 +11464,9 @@ function __Z13readLogLevelsP9LogHandle($lh) {
       $storemerge3 = (($storemerge3$in) + 1)|0;
       $39 = (($storemerge1) + ($storemerge3)|0);
       $40 = HEAP8[$39>>0]|0;
-      if ((($40<<24>>24) == 42)) {
+      if ((($40<<24>>24) == 0)) {
+       break L18;
+      } else if ((($40<<24>>24) == 42)) {
        $storemerge4 = 0;
        while(1) {
         $41 = ($storemerge4|0)<(5);
@@ -11479,8 +11479,6 @@ function __Z13readLogLevelsP9LogHandle($lh) {
         $43 = (($storemerge4) + 1)|0;
         $storemerge4 = $43;
        }
-      } else if ((($40<<24>>24) == 0)) {
-       break L18;
       } else {
        $44 = $40 << 24 >> 24;
        $45 = (($44) + -48)|0;
@@ -11623,7 +11621,7 @@ function _fskube_initialize($sampleRate) {
  var $0 = 0, label = 0, sp = 0;
  sp = STACKTOP;
  HEAP32[((12888 + 8|0))>>2] = $sampleRate;
- HEAP32[((12888 + 12|0))>>2] = 1200;
+ HEAP32[((12888 + 12|0))>>2] = 1220;
  HEAP32[((12888 + 16|0))>>2] = 1200;
  HEAP32[((12888 + 20|0))>>2] = 2200;
  HEAP32[((12888 + 4|0))>>2] = 12984;
@@ -11645,7 +11643,7 @@ function _fskube_addSample($sample) {
  $1 = HEAP8[13096>>0]|0;
  $2 = ($1<<24>>24)==(0);
  if ($2) {
-  ___assert_fail((13104|0),(13120|0),53,(13136|0));
+  ___assert_fail((13104|0),(13120|0),54,(13136|0));
   // unreachable;
  }
  HEAP8[((13064 + 4|0))>>0] = 0;
@@ -11692,7 +11690,7 @@ function _fskube_getState($agg$result) {
  $0 = HEAP8[13096>>0]|0;
  $1 = ($0<<24>>24)==(0);
  if ($1) {
-  ___assert_fail((13104|0),(13120|0),72,(13248|0));
+  ___assert_fail((13104|0),(13120|0),73,(13248|0));
   // unreachable;
  } else {
   ;HEAP32[$agg$result+0>>2]=HEAP32[((13064 + 8|0))+0>>2]|0;HEAP32[$agg$result+4>>2]=HEAP32[((13064 + 8|0))+4>>2]|0;HEAP32[$agg$result+8>>2]=HEAP32[((13064 + 8|0))+8>>2]|0;HEAP32[$agg$result+12>>2]=HEAP32[((13064 + 8|0))+12>>2]|0;
@@ -11968,7 +11966,7 @@ function _strtok($s,$sep) {
    $49 = $42;
    $50 = $49 & 3;
    $51 = ($50|0)==(0);
-   L36: do {
+   L35: do {
     if ($51) {
      $$02$lcssa$i$i = $42;
     } else {
@@ -11992,7 +11990,7 @@ function _strtok($s,$sep) {
       $57 = ($56|0)==(0);
       if ($57) {
        $$02$lcssa$i$i = $54;
-       break L36;
+       break L35;
       }
       $$pre = HEAP8[$54>>0]|0;
       $$026$i$i = $54;$58 = $$pre;
@@ -12006,7 +12004,7 @@ function _strtok($s,$sep) {
    $65 = $64 ^ -2139062144;
    $66 = $65 & $63;
    $67 = ($66|0)==(0);
-   L43: do {
+   L42: do {
     if ($67) {
      $76 = $62;$w$03$i$i = $$02$lcssa$i$i;
      while(1) {
@@ -12019,7 +12017,7 @@ function _strtok($s,$sep) {
       $69 = (($w$03$i$i) + 4|0);
       if (!($81)) {
        $w$0$lcssa$i$i = $w$03$i$i;
-       break L43;
+       break L42;
       }
       $68 = HEAP32[$69>>2]|0;
       $70 = (($68) + -16843009)|0;

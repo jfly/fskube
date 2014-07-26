@@ -11,6 +11,9 @@ import FskTest
 lh = fskube.LOG_HANDLE()
 
 class RoundtripTest(FskTest.FskTest):
+
+    def setUp(self):
+        self.bits = [0,1,0,0,0,0,0,1,0,1,0,0,0,0,1]
     
     def doRoundtrip(self, samplesPerSecond, bits):
         lh.log1("Roundtrip test at %shZ" % samplesPerSecond)
@@ -31,12 +34,18 @@ class RoundtripTest(FskTest.FskTest):
 
         demodulator.flush()
 
+        c.data = list(map(int, c.data))
         self.assertEqual(c.data, bits)
 
-    def test(self):
-        bits = [0,1,0,0,0,0,0,1,0,1,0,0,0,0,1]
-        for samplesPerSecond in [ 48000, 44100, 16000 ]:
-            self.doRoundtrip(samplesPerSecond, bits)
+    def test_48000(self):
+        self.doRoundtrip(48000, self.bits)
+
+    def test_44100(self):
+        self.doRoundtrip(44100, self.bits)
+
+    @unittest.skip("Not supported")
+    def test_16000(self):
+        self.doRoundtrip(16000, self.bits)
 
 class DataTest(FskTest.FskTest):
 
@@ -104,9 +113,10 @@ class DataTest(FskTest.FskTest):
                     if sample >= 0:
                         sample = (1.0*sample) / maxsample
                     else:
-                        sample = - (1.0*sample) / minsample
+                        sample = (-1.0*sample) / minsample
                     lh.log2("%s: %s" % (index, sample))
                     demodulator.receive(sample)
+                c.data = list(map(int, c.data))
                 self.assertEqual(c.data, correctBits)
             else:
                 c.reset()
@@ -118,6 +128,7 @@ class DataTest(FskTest.FskTest):
                     sample = float(index_sample[1])
                     demodulator.receive(sample)
                 demodulator.flush()
+                c.data = list(map(int, c.data))
                 self.assertEqual(c.data, correctBits)
             lh.log1("************ " + filename + " passed! **************")
 

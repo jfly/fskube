@@ -31,9 +31,12 @@ void Modulator::receive(bool bit) {
     }
 }
 
-Demodulator::Demodulator() {}
+Demodulator::Demodulator() {
+    sampleIndex = 0;
+}
 
 Demodulator::Demodulator(FskParams fsk) {
+    sampleIndex = 0;
     setFskParams(fsk);
     reset();
 }
@@ -43,7 +46,10 @@ void Demodulator::setFskParams(FskParams fsk) {
 }
 
 void Demodulator::reset() {
-    sampleIndex = 0;
+    // We don't reset sampleIndex because it's easier to debug tests when the index
+    // is monotonically increasing. It'll take a very long time for an unsigned
+    // long long to wrap =).
+    // sampleIndex = 0;
     lastZeroCrossing = {};
     insignificantSampleCount = 0;
     lastSignificantSample = {};
@@ -54,7 +60,7 @@ void Demodulator::reset() {
 
 void Demodulator::flush() {
     LOG2("flush() lastFrequencyHalfSeenCount %d lastFrequencyHalfSeen %d", lastFrequencyHalfSeenCount, lastFrequencyHalfSeen);
-    if(lastFrequencyHalfSeen > 0) {
+    if(lastFrequencyHalfSeenCount >= 1) {
         bool bit = fsk.frequencyToBit(lastFrequencyHalfSeen);
         LOG2("sending bit %d", bit);
         send(bit);
@@ -70,11 +76,10 @@ template <typename T> int sgn(T val) {
 void Demodulator::receive(double value) {
     assert(value <= 1.0);
     assert(value >= -1.0);
-    sampleIndex++;
     LOG4("Demodulator::receive(%f) sampleIndex: %llu", value, sampleIndex);
 
     Sample sample;
-    sample.index = sampleIndex;
+    sample.index = sampleIndex++;
     sample.value = value;
     sample.valid = true;
 
@@ -101,7 +106,7 @@ void Demodulator::receive(double value) {
     LOG4("receive() %f %d %f", value, lastSignificantSample.valid, lastSignificantSample.value);
     insignificantSampleCount = 0;
     if(lastSignificantSample.valid) {
-        unsigned long long index = sampleIndex;
+        unsigned long long index = sample.index;
         unsigned long long lastIndex = lastSignificantSample.index;
         double lastValue = lastSignificantSample.value;
         if(sgn(lastValue) != sgn(value)) {
@@ -152,18 +157,29 @@ void Demodulator::addZeroCrossing(Sample sample) {
         double spaceRatio = crossingTimeDelta / spaceCrossingTime;
         double distanceToMark = ABS(markRatio - 1);
         double distanceToSpace = ABS(spaceRatio - 1);
-        LOG1("Zero crossing of duration %f seconds", crossingTimeDelta);
-        LOG1("distanceToMark: %f distanceToSpace: %f abs(distanceToMark - distanceToSpace) = %f",
-                distanceToMark, distanceToSpace, ABS(distanceToMark - distanceToSpace));
+        LOG1("Zero crossing of %f seconds (distanceToMark: %f distanceToSpace: %f)",
+                crossingTimeDelta, distanceToMark, distanceToSpace);
 
-        if(distanceToMark < distanceToSpace) {
+        float MAX_DISTANCE = 0.15;
+        if(distanceToMark <= MAX_DISTANCE) {
             addFrequencyHalfSeen(fsk.markFrequency);
-        } else {
+        } else if(distanceToSpace <= MAX_DISTANCE) {
             addFrequencyHalfSeen(fsk.spaceFrequency);
+        } else {
+            LOG1("Ignoring zero crossing");
+            if(lastFrequencyHalfSeenCount >= 1) {
+                // We've seen some occurences of the previous frequency (but
+                // we hadn't seen enough to fire a bit). Dump the bit.
+                bool bit = fsk.frequencyToBit(lastFrequencyHalfSeen);
+                LOG2("sending bit %d", bit);
+                send(bit);
+            }
+            lastFrequencyHalfSeen = 0;
+            lastFrequencyHalfSeenCount = 0;
         }
     }
     lastZeroCrossing = sample;
-    LOG1("Zero crossing is now %llu isValid: %d)",
+    LOG1("Zero crossing is now %llu isValid: %d",
             lastZeroCrossing.index, lastZeroCrossing.valid);
 }
 
@@ -174,11 +190,12 @@ void Demodulator::addFrequencyHalfSeen(unsigned int frequency) {
     }
     LOG2("Frequency seen! %uhZ (had seen %uhZ %u times)",
             frequency, lastFrequencyHalfSeen, lastFrequencyHalfSeenCount);
-    double periodsPerSecond = lastFrequencyHalfSeen;
-    double periodsPerBit = fsk.secondsPerBit() * periodsPerSecond;
-    unsigned int halfPeriodsPerBit = rint(2 * periodsPerBit);
     if(frequency == lastFrequencyHalfSeen) {
         lastFrequencyHalfSeenCount++;
+
+        double periodsPerSecond = lastFrequencyHalfSeen;
+        double periodsPerBit = fsk.secondsPerBit() * periodsPerSecond;
+        unsigned int halfPeriodsPerBit = rint(2 * periodsPerBit);
         if(lastFrequencyHalfSeenCount >= halfPeriodsPerBit) {
             bool bit = fsk.frequencyToBit(lastFrequencyHalfSeen);
             LOG2("sending bit %d", bit);
@@ -189,19 +206,13 @@ void Demodulator::addFrequencyHalfSeen(unsigned int frequency) {
         // We've witnessed a change in frequency!
         if(lastFrequencyHalfSeenCount >= 1) {
             // We've seen some occurences of the previous frequency (but
-            // we hadn't seen enough to fire a bit). Dump the bit, but
-            // reset lastFrequencyHalfSeenCount. The intuition here is that
-            // the frequency we just saw was straddled between 2 bits,
-            // and we don't want to count it towards our next bit.
+            // we hadn't seen enough to fire a bit). Flush the bit.
             bool bit = fsk.frequencyToBit(lastFrequencyHalfSeen);
             LOG2("sending bit %d", bit);
             send(bit);
-            lastFrequencyHalfSeen = frequency;
-            lastFrequencyHalfSeenCount = 0;
-        } else {
-            lastFrequencyHalfSeen = frequency;
-            lastFrequencyHalfSeenCount = 1;
         }
+        lastFrequencyHalfSeen = frequency;
+        lastFrequencyHalfSeenCount = 1;
     }
 }
 
