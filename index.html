@@ -48,7 +48,7 @@ $(document).ready(function() {
         if(state.on) {
             // We seem to have issues decoding signals where both hands are down.
             // This is a hack to ignore those signals and not update the timer.
-            $("#counter").text(state.lf + " " + state.cr + " " + state.checksum + " " + state.computedChecksum + " " + msToClock(state.millis, state.generation == 3));
+            $("#counter").text(msToClock(state.millis, state.generation == 3));
         } else {
             $("#counter").text("");
         }
