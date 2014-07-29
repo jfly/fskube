@@ -42,6 +42,7 @@ Demodulator::Demodulator(FskParams fsk) {
 }
 
 void Demodulator::setFskParams(FskParams fsk) {
+    assert(fsk.markFrequency < fsk.spaceFrequency);
     this->fsk = fsk;
 }
 
@@ -56,6 +57,9 @@ void Demodulator::reset() {
 
     lastFrequencyHalfSeen = 0;
     lastFrequencyHalfSeenCount = 0;
+
+    nearMarks = 0;
+    currentMarkStreak = 0;
 }
 
 void Demodulator::flush() {
@@ -80,6 +84,7 @@ void Demodulator::receive(double value) {
 
     Sample sample;
     sample.index = sampleIndex++;
+    sample.remainder = 0;
     sample.value = value;
     sample.valid = true;
 
@@ -95,7 +100,7 @@ void Demodulator::receive(double value) {
         // Quick bootstrapping. If we haven't seen any "significant"
         // signals yet, and this one is close to zero (ie:
         // "insignificant"), treat it as a zero. Note that we don't
-        // call _addZeroCrossing() here, as we may have a bunch
+        // call addZeroCrossing() here, as we may have a bunch
         // of zeros in a row, and we don't want them to be treated as
         // half periods of our signal.
         if(!lastSignificantSample.valid) {
@@ -122,10 +127,16 @@ void Demodulator::receive(double value) {
             //   -lastValue*index + lastValue*C = value*C - value*lastIndex
             //   -lastValue*index + value*lastIndex = value*C - C*lastValue
             //   C = (value*lastIndex - lastValue*index) / (value - lastValue)
-            unsigned long long crossingIndex =
+
+            // TODO - this should be changed to do integer math for speed and accuracy
+            // Even at 48kHz sampling, it should take hundreds of years before
+            // we start to lose precision with a double.
+            // TODO - store samples as ints in some range rather than doubles
+            double crossingIndex =
                 (value*lastIndex - lastValue*index) / (value - lastValue);
             Sample crossingSample;
             crossingSample.index = crossingIndex;
+            crossingSample.remainder = (crossingIndex - (int) crossingIndex);
             crossingSample.value = 0;
             crossingSample.valid = true;
             // We crossed the x axis in a "significant" way!
@@ -139,16 +150,16 @@ void Demodulator::receive(double value) {
 
 /**
  * Given the index at which a zero crossing occurred, determine
- * the current frequency of the signal.
- * If the frequency is nonsensical, reset everything.
- * If the frequency is near the mark or space frequency, 
- * call either addMarkFrequencySeen() or addSpaceFrequencySeen().
+ * the current frequency of the signal. If the frequency is clear,
+ * call addFrequencyHalfSeen(), if it's unclear, then do some special
+ * stuff to make it more likely to see marks (the signal with a lower frequency).
  */
 void Demodulator::addZeroCrossing(Sample sample) {
-    LOG1("Zero crossing! @%llu (last one was at %llu isValid: %d)",
-            sample.index, lastZeroCrossing.index, lastZeroCrossing.valid);
+    LOG1("Zero crossing! @%llu+%f (last one was at %llu+%f isValid: %d)",
+            sample.index, sample.remainder, lastZeroCrossing.index, lastZeroCrossing.remainder, lastZeroCrossing.valid);
     if(lastZeroCrossing.valid) {
-        double crossingTimeDelta = fsk.samplesToTime(sample.index - lastZeroCrossing.index);
+        double samples = (sample.index - lastZeroCrossing.index) + (sample.remainder - lastZeroCrossing.remainder);
+        double crossingTimeDelta = fsk.samplesToTime(samples);
         // 1/2th the hZ of a signal is its expected amount of time
         // between zero crossings.
         double markCrossingTime = 0.5/fsk.markFrequency;
@@ -160,10 +171,28 @@ void Demodulator::addZeroCrossing(Sample sample) {
         LOG1("Zero crossing of %f seconds (distanceToMark: %f distanceToSpace: %f)",
                 crossingTimeDelta, distanceToMark, distanceToSpace);
 
-        float MAX_DISTANCE = 0.15;
-        if(distanceToMark <= MAX_DISTANCE) {
+        // If the measured frequency is within 10% of the target mark or space
+        // frequency, call addFrequencyHalfSeen(). If not, keep track of
+        // frequencies within 20% of the mark (this are called nearMarks).
+        // If we witness a nearMark without ever seeing a "perfect"
+        // (within 10%) mark (currentMarkStreak == 0), then we send out a mark.
+        // Also, if we witness 2 nearMarks, fire a mark. Unfortunately, this
+        // logic is pretty hardcoded for markFrequency=1200Hz and
+        // spaceFrequency=2200Hz.
+        float MAX_PERFECT_DISTANCE = 0.10;
+        float MAX_NEAR_DISTANCE = 0.20;
+        if(distanceToMark <= MAX_PERFECT_DISTANCE) {
+            currentMarkStreak++;
             addFrequencyHalfSeen(fsk.markFrequency);
-        } else if(distanceToSpace <= MAX_DISTANCE) {
+        } else if(distanceToSpace <= MAX_PERFECT_DISTANCE) {
+            if(currentMarkStreak == 0 && nearMarks >= 1) {
+                bool bit = fsk.frequencyToBit(fsk.markFrequency);
+                LOG2("sending bit %d", bit);
+                send(bit);
+                nearMarks = 0;
+            }
+            currentMarkStreak = 0;
+            nearMarks = 0;
             addFrequencyHalfSeen(fsk.spaceFrequency);
         } else {
             LOG1("Ignoring zero crossing");
@@ -173,14 +202,24 @@ void Demodulator::addZeroCrossing(Sample sample) {
                 bool bit = fsk.frequencyToBit(lastFrequencyHalfSeen);
                 LOG2("sending bit %d", bit);
                 send(bit);
+            } else {
+                if(distanceToMark <= MAX_NEAR_DISTANCE) {
+                    nearMarks++;
+                    if(nearMarks == 2) {
+                        bool bit = fsk.frequencyToBit(fsk.markFrequency);
+                        LOG2("sending bit %d", bit);
+                        send(bit);
+                        nearMarks = 0;
+                    }
+                }
             }
             lastFrequencyHalfSeen = 0;
             lastFrequencyHalfSeenCount = 0;
         }
     }
     lastZeroCrossing = sample;
-    LOG1("Zero crossing is now %llu isValid: %d",
-            lastZeroCrossing.index, lastZeroCrossing.valid);
+    LOG1("Zero crossing is now %llu+%f isValid: %d",
+         lastZeroCrossing.index, lastZeroCrossing.remainder, lastZeroCrossing.valid);
 }
 
 void Demodulator::addFrequencyHalfSeen(unsigned int frequency) {

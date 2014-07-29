@@ -104,9 +104,9 @@ void StackmatInterpreter::receive(int byte) {
                 } else {
                     thousandthsDigit = 0;
                 }
-                char checksum = receivedBytes[i++];
-                char cr = receivedBytes[i++];
-                char lf = receivedBytes[i++];
+                unsigned char checksum = receivedBytes[i++];
+                unsigned char lf = receivedBytes[i++];
+                unsigned char cr = receivedBytes[i++];
 
                 state.millis = 0;
                 state.millis += minuteDigit * MILLIS_PER_MINUTE;
@@ -116,16 +116,17 @@ void StackmatInterpreter::receive(int byte) {
                 state.millis += hundredthsDigit * MILLIS_PER_CENTISECOND;
                 state.millis += thousandthsDigit;
 
-                char computedChecksum = 64 + minuteDigit + tensSecondsDigit +
+                unsigned char computedChecksum = 64 + minuteDigit + tensSecondsDigit +
                     onesSecondsDigit + tenthsDigit + hundredthsDigit +
                     thousandthsDigit;
-                bool valid = (computedChecksum == checksum) && (cr == '\r') && (lf == '\n');
+                state.checksum = checksum;
+                state.computedChecksum = computedChecksum;
+                state.lf = lf;
+                state.cr = cr;
 
                 receivedBytesLength = 0;
-                if(valid) {
-                    state.on = true;
-                    send(state);
-                }
+                state.on = true;
+                send(state);
                 break;
             }
             default:

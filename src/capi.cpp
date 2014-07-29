@@ -35,7 +35,13 @@ static unsigned int samplesUntilOff;
 void fskube_initialize(unsigned int sampleRate) {
     FskParams fsk;
     fsk.samplesPerSecond = sampleRate;
-    fsk.bitsPerSecond = 1200;
+
+    // The baud rate of a gen2 timer is 1200 Hz, and the baud rate of a gen3 timer
+    // is 1220 Hz (even when it sends a gen2 signal). Ideally, we'd have demodulators
+    // set up for both baud rates, but gen2 interpretation seems to work fine if we
+    // set the baud rate to 1220bps.
+    fsk.bitsPerSecond = 1220;
+
     fsk.markFrequency = 1200;
     fsk.spaceFrequency = 2200;
     demodulator.setFskParams(fsk);

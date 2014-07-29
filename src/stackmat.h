@@ -14,6 +14,10 @@ namespace fskube {
 
 struct StackmatState {
     bool on;
+    unsigned char checksum;
+    unsigned char computedChecksum;
+    unsigned char lf;
+    unsigned char cr;
     unsigned int millis;
     unsigned int generation;
     unsigned char commandByte;

@@ -22,6 +22,9 @@ struct FskParams {
     double samplesToTime(unsigned int samples) {
         return (double) samples / samplesPerSecond;
     }
+    double samplesToTime(double samples) {
+        return samples / samplesPerSecond;
+    }
     bool frequencyToBit(unsigned int frequency) {
         return frequency == markFrequency ? 1 : 0;
     }
@@ -39,6 +42,7 @@ class Modulator : public Sender<bool, double> {
 
 struct Sample {
     unsigned long long index;
+    float remainder;
     double value;
     bool valid;
 };
@@ -64,6 +68,8 @@ class Demodulator : public Sender<double, bool> {
         void reset();
         void addZeroCrossing(Sample sample);
         void addFrequencyHalfSeen(unsigned int frequency);
+        int nearMarks;
+        int currentMarkStreak;
     public:
         Demodulator();
         Demodulator(FskParams fsk);

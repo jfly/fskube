@@ -48,6 +48,10 @@ EMSCRIPTEN_BINDINGS(my_module) {
     value_object<StackmatState>("StackmatState")
         .field("millis", &StackmatState::millis)
         .field("generation", &StackmatState::generation)
+        .field("checksum", &StackmatState::checksum)
+        .field("computedChecksum", &StackmatState::computedChecksum)
+        .field("lf", &StackmatState::lf)
+        .field("cr", &StackmatState::cr)
         .field("commandByte", &StackmatState::commandByte)
         .field("on", &StackmatState::on)
         ;
