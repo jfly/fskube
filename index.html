@@ -45,6 +45,7 @@ $(document).ready(function() {
 
     Stackmat.initialize("release/fskube.js");
     Stackmat.onstackmatstate = function(state) {
+        $("#info").text(Stackmat.getSampleRate() + "Hz");
         if(state.on) {
             // We seem to have issues decoding signals where both hands are down.
             // This is a hack to ignore those signals and not update the timer.
@@ -65,6 +66,7 @@ $(document).ready(function() {
  
 <body>
 <div class="container">
+    <div id="info"></div>
     <div id="counter"></div>
 </div>
 </body>

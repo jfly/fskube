@@ -114,4 +114,8 @@ Stackmat.getLogLevels = function(cb) {
     });
 };
 
+Stackmat.getSampleRate = function() {
+    return audioContext.sampleRate;
+};
+
 })();
