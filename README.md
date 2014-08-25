@@ -9,3 +9,10 @@ A software modem with a web audio api demo.
 * `make check` runs the tests. Requires swig to produce the python wrapper for the c++ code.
 
 * `make serve` starts up a local server
+
+== TODO
+
+* Move off gh-pages branch
+* Don't copy c++ code into android project
+* Add android to travis-ci
+* Integrate android release with git tags
