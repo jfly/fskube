@@ -1,0 +1,1 @@
+include ':fskube-android', ':fskube-android-demo', ':fskube-android-demo'

@@ -1,0 +1,101 @@
+apply plugin: 'com.android.library'
+apply plugin: 'maven'
+
+version = '0.0.1'
+group = "com.jflei"
+
+android {
+    compileSdkVersion 20
+    buildToolsVersion "20.0.0"
+
+    defaultConfig {
+        applicationId "com.jflei.fskube"
+        minSdkVersion 8
+        targetSdkVersion 8
+        versionName project.version
+        ndk {
+            moduleName "fskube"
+        }
+    }
+    buildTypes {
+        release {
+            runProguard false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:appcompat-v7:20.0.0'
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from android.sourceSets.main.java.srcDirs
+}
+
+artifacts {
+    archives sourcesJar
+}
+
+def bintrayUser
+if(hasProperty('bintray.user')) {
+    bintrayUser = property('bintray.user')
+}
+def bintrayKey
+if(hasProperty('bintray.key')) {
+    bintrayKey = property('bintray.key')
+}
+
+uploadArchives {
+    configuration = configurations.archives
+    repositories.mavenDeployer {
+        repository(id: 'bintray-jfly-maven-fskube', url: 'https://api.bintray.com/maven/jfly/maven/fskube') {
+            authentication(
+                userName: bintrayUser,
+                password: bintrayKey
+            )
+        }
+
+        pom.project {
+            name 'fskube android library'
+            packaging 'aar'
+            description 'Stackmat interpreter library'
+            url 'https://github.com/jfly/fskube/'
+
+            scm {
+                url 'scm:git@github.com:jfly/fskube.git'
+                connection 'scm:git@github.com:jfly/fskube.git'
+                developerConnection 'scm:git@github.com:jfly/fskube.git'
+            }
+
+            licenses {
+                license {
+                    name 'GPLv3'
+                }
+            }
+
+            developers {
+                developer {
+                    id 'jfly'
+                    name 'Jeremy Fleischman'
+                    email 'jeremyfleischman@gmail.com'
+                }
+            }
+        }
+    }
+}
+
+uploadArchives.doFirst {
+    if(!bintrayUser) {
+        throw new GradleException('Please set bintray.user in ~/.gradle/gradle.properties')
+    }
+    if(!bintrayKey) {
+        throw new GradleException('Please set bintray.key in ~/.gradle/gradle.properties')
+    }
+}
+
+uploadArchives.doLast {
+    println "**** Release $version successfully uploaded. Go to https://bintray.com/jfly/maven/fskube/ to publish. ****"
+}

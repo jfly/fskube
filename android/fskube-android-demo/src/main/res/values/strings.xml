@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">fskube-android-demo</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="title_display">Display</string>
+    <string name="title_oscilloscope">Oscilloscope</string>
+</resources>
