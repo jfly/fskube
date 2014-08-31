@@ -1,9 +1,9 @@
 #ifndef CAPI_H
 #define CAPI_H
 
-extern "C" {
-
 #include "stackmat.h"
+
+extern "C" {
 
 // Note that this api only supports interpreting one stackmat at a time.
 // This seems fine to me.

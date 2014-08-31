@@ -14,8 +14,12 @@ using namespace fskube;
 class StackmatStateReceiver : public Receiver<StackmatState> {
 
     public:
-        bool receivedSomething = false;
+        bool receivedSomething;
         StackmatState state;
+
+        StackmatStateReceiver() {
+            receivedSomething = false;
+        }
 
         void receive(StackmatState state) {
             receivedSomething = true;

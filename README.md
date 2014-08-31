@@ -13,6 +13,5 @@ A software modem with a web audio api demo.
 == TODO
 
 * Move off gh-pages branch
-* Don't copy c++ code into android project
 * Add android to travis-ci
 * Integrate android release with git tags
