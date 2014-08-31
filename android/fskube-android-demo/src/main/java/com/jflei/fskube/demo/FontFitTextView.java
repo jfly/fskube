@@ -30,12 +30,16 @@ public class FontFitTextView extends TextView {
     /* Re size the font so the specified text fits in the text box
      * assuming the text box is the specified width.
      */
-    private void refitText(String text, int textWidth)
-    {
-        if (textWidth <= 0)
+    private void refitText(String text, int textWidth, int textHeight) {
+        if (textWidth <= 0) {
             return;
+        }
         int targetWidth = textWidth - this.getPaddingLeft() - this.getPaddingRight();
-        float hi = 10000;
+        // We restrict the max font size to 90% of the available height. Don't ask me why 100%
+        // does not work, it seems to result in text getting cut off.
+        int targetHeight = (int) (0.9 * (textHeight - (getPaddingBottom() + getPaddingTop())));
+
+        float hi = targetHeight;
         float lo = 2;
         final float threshold = 0.5f; // How close we have to be
 
@@ -44,34 +48,34 @@ public class FontFitTextView extends TextView {
         while((hi - lo) > threshold) {
             float size = (hi+lo)/2;
             mTestPaint.setTextSize(size);
-            if(mTestPaint.measureText(text) >= targetWidth)
+            if(mTestPaint.measureText(text) >= targetWidth) {
                 hi = size; // too big
-            else
+            } else {
                 lo = size; // too small
+            }
         }
         // Use lo so that we undershoot rather than overshoot
         this.setTextSize(TypedValue.COMPLEX_UNIT_PX, lo);
     }
 
     @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
-    {
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         int parentWidth = MeasureSpec.getSize(widthMeasureSpec);
         int height = getMeasuredHeight();
-        refitText(this.getText().toString(), parentWidth);
+        refitText(this.getText().toString(), parentWidth, height);
         this.setMeasuredDimension(parentWidth, height);
     }
 
     @Override
     protected void onTextChanged(final CharSequence text, final int start, final int before, final int after) {
-        refitText(text.toString(), this.getWidth());
+        refitText(text.toString(), this.getWidth(), this.getHeight());
     }
 
     @Override
     protected void onSizeChanged (int w, int h, int oldw, int oldh) {
         if (w != oldw) {
-            refitText(this.getText().toString(), w);
+            refitText(this.getText().toString(), w, h);
         }
     }
 
