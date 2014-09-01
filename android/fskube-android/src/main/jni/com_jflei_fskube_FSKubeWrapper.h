@@ -31,6 +31,22 @@ JNIEXPORT jboolean JNICALL Java_com_jflei_fskube_FSKubeWrapper_addSample
 JNIEXPORT jint JNICALL Java_com_jflei_fskube_FSKubeWrapper_getTimeMillis
   (JNIEnv *, jclass);
 
+/*
+ * Class:     com_jflei_fskube_FSKubeWrapper
+ * Method:    getLogLevels
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_com_jflei_fskube_FSKubeWrapper_getLogLevels
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     com_jflei_fskube_FSKubeWrapper
+ * Method:    setLogLevels
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_com_jflei_fskube_FSKubeWrapper_setLogLevels
+  (JNIEnv *, jclass, jstring);
+
 #ifdef __cplusplus
 }
 #endif

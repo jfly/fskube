@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "fsk.h"
+#include "digitizer.h"
 #include "rs232.h"
 #include "stackmat.h"
 #include "capi.h"
@@ -29,9 +30,15 @@ class StackmatStateReceiver : public Receiver<StackmatState> {
 };
 
 static Demodulator demodulator;
-static Rs232Interpreter rs232Interpreter;
-static StackmatInterpreter stackmatInterpreter;
+static Rs232Interpreter fskRs232Interpreter;
+static StackmatInterpreter fskStackmatInterpreter;
+
+static Digitizer digitizer;
+static Rs232Interpreter digitalRs232Interpreter;
+static StackmatInterpreter digitalStackmatInterpreter;
+
 static StackmatStateReceiver stackmatStateReceiver;
+
 static bool initialized = false;
 static unsigned int samplesWithoutData = 0;
 static unsigned int samplesUntilOff;
@@ -50,9 +57,16 @@ void fskube_initialize(unsigned int sampleRate) {
     fsk.spaceFrequency = 2200;
     demodulator.setFskParams(fsk);
 
-    demodulator.connect(&rs232Interpreter);
-    rs232Interpreter.connect(&stackmatInterpreter);
-    stackmatInterpreter.connect(&stackmatStateReceiver);
+    digitizer.setSamplesPerSecond(sampleRate);
+    digitizer.setBitsPerSecond(fsk.bitsPerSecond);
+
+    demodulator.connect(&fskRs232Interpreter);
+    fskRs232Interpreter.connect(&fskStackmatInterpreter);
+    fskStackmatInterpreter.connect(&stackmatStateReceiver);
+
+    digitizer.connect(&digitalRs232Interpreter);
+    digitalRs232Interpreter.connect(&digitalStackmatInterpreter);
+    digitalStackmatInterpreter.connect(&stackmatStateReceiver);
 
     // Half a second without data is long enough to declare the timer "off"
     samplesUntilOff = sampleRate / 2;
@@ -63,6 +77,7 @@ bool fskube_addSample(double sample) {
     assert(initialized);
     stackmatStateReceiver.receivedSomething = false;
     demodulator.receive(sample);
+    digitizer.receive(sample);
     if(stackmatStateReceiver.receivedSomething) {
         samplesWithoutData = 0;
         return true;

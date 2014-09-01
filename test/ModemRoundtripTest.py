@@ -67,27 +67,33 @@ class DataTest(FskTest.FskTest):
             if type(correctBits) is str:
                 correctBits = list(map(int, correctBits.replace(" ", "")))
 
-            headerData = header[1:].strip().split(" ")
             def parseInt(freq, suffix):
                 return int(freq.lower().replace(suffix.lower(), ""))
-            samplesPerSecond = parseInt(headerData[0], suffix="Hz")
-            onFrequency = parseInt(headerData[1], suffix="Hz")
-            assert onFrequency
-            offFrequency = parseInt(headerData[2], suffix="Hz")
-            assert offFrequency
-            bitsPerSecond = parseInt(headerData[3], suffix="bps")
-            assert bitsPerSecond
 
-            fskParams = fskube.FskParams()
-            fskParams.samplesPerSecond = samplesPerSecond
-            fskParams.bitsPerSecond = bitsPerSecond
-            fskParams.markFrequency = onFrequency
-            fskParams.spaceFrequency = offFrequency
-            modulator = fskube.Modulator(fskParams)
-            demodulator = fskube.Demodulator(fskParams)
             c = self.createCapturer(fskube.boolReceiver)
-            modulator.connect(demodulator)
-            demodulator.connect(c)
+            headerData = header[1:].strip().split(" ")
+            sampleReceiver = None
+            if len(headerData) == 2:
+                # This is raw data, no modem involved
+                samplesPerSecond = parseInt(headerData[0], suffix="Hz")
+                bitsPerSecond = parseInt(headerData[1], suffix="bps")
+                sampleReceiver = fskube.Digitizer(samplesPerSecond, bitsPerSecond)
+                sampleReceiver.connect(c)
+            else:
+                assert len(headerData) == 4
+                # This is raw data, no modem involved
+                samplesPerSecond = parseInt(headerData[0], suffix="Hz")
+                onFrequency = parseInt(headerData[1], suffix="Hz")
+                offFrequency = parseInt(headerData[2], suffix="Hz")
+                bitsPerSecond = parseInt(headerData[3], suffix="bps")
+
+                fskParams = fskube.FskParams()
+                fskParams.samplesPerSecond = samplesPerSecond
+                fskParams.bitsPerSecond = bitsPerSecond
+                fskParams.markFrequency = onFrequency
+                fskParams.spaceFrequency = offFrequency
+                sampleReceiver = fskube.Demodulator(fskParams)
+                sampleReceiver.connect(c)
 
             if data[0].startswith("#"):
                 # Treat this line as a wav file
@@ -98,7 +104,7 @@ class DataTest(FskTest.FskTest):
                     nchannels = wav.getnchannels()
                     nframes = wav.getnframes()
                     frames = wav.readframes(nframes * nchannels)
-                    out = struct.unpack_from("%dh" % nframes * nchannels, frames)
+                    out = struct.unpack_from("%dh" % (nframes * nchannels), frames)
                     if nchannels == 2:
                         left = out[0::2]
                         right = out[1::2]
@@ -115,7 +121,7 @@ class DataTest(FskTest.FskTest):
                     else:
                         sample = (-1.0*sample) / minsample
                     lh.log2("%s: %s" % (index, sample))
-                    demodulator.receive(sample)
+                    sampleReceiver.receive(sample)
                 c.data = list(map(int, c.data))
                 self.assertEqual(c.data, correctBits)
             else:
@@ -126,8 +132,8 @@ class DataTest(FskTest.FskTest):
                     index_sample = pair.split(" ")
                     sampleIndex = int(index_sample[0])
                     sample = float(index_sample[1])
-                    demodulator.receive(sample)
-                demodulator.flush()
+                    sampleReceiver.receive(sample)
+                sampleReceiver.flush()
                 c.data = list(map(int, c.data))
                 self.assertEqual(c.data, correctBits)
             lh.log1("************ " + filename + " passed! **************")

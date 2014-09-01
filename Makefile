@@ -6,7 +6,7 @@ CFLAGS := -Wall -std=c++11 -Wno-c++11-narrowing
 PYTHON_INC := -I/usr/include/python3.3m -I/usr/include/python3.2
 INC := -I$(SRC)
 
-FSKUBE_SRCS := $(BLD)/fsk.cpp $(BLD)/rs232.cpp $(BLD)/stackmat.cpp $(BLD)/logging.cpp $(BLD)/capi.cpp
+FSKUBE_SRCS := $(BLD)/fsk.cpp $(BLD)/rs232.cpp $(BLD)/stackmat.cpp $(BLD)/logging.cpp $(BLD)/capi.cpp $(BLD)/digitizer.cpp
 FSKUBE_OBJS := $(FSKUBE_SRCS:.cpp=.o)
 PYTHONWRAPPER_OBJS := $(FSKUBE_OBJS) $(BLD)/fskube_wrap.o
 

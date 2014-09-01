@@ -1,33 +1,30 @@
 #include "com_jflei_fskube_FSKubeWrapper.h"
 #include "capi.h"
+#include "logging.h"
 
-/*
- * Class:     com_jflei_fskube_FSKubeWrapper
- * Method:    initialize
- * Signature: (I)V
- */
 JNIEXPORT void JNICALL Java_com_jflei_fskube_FSKubeWrapper_initialize
   (JNIEnv *env, jclass clz, jint sampleRate) {
     fskube_initialize(sampleRate);
 }
 
-/*
- * Class:     com_jflei_fskube_FSKubeWrapper
- * Method:    addSample
- * Signature: (D)V
- */
 JNIEXPORT jboolean JNICALL Java_com_jflei_fskube_FSKubeWrapper_addSample
   (JNIEnv *env, jclass clz, jdouble sample) {
     return fskube_addSample(sample) ? JNI_TRUE : JNI_FALSE;
 }
 
-/*
- * Class:     com_jflei_fskube_FSKubeWrapper
- * Method:    getTimeMillis
- * Signature: ()I
- */
 JNIEXPORT jint JNICALL Java_com_jflei_fskube_FSKubeWrapper_getTimeMillis
   (JNIEnv *env, jclass clz) {
     return fskube_getState().millis;
 }
 
+JNIEXPORT jstring JNICALL Java_com_jflei_fskube_FSKubeWrapper_getLogLevels
+  (JNIEnv *env, jclass clz) {
+    return env->NewStringUTF(getLogLevels());
+}
+
+JNIEXPORT void JNICALL Java_com_jflei_fskube_FSKubeWrapper_setLogLevels
+  (JNIEnv *env, jclass clz, jstring jLogLevels) {
+    const char *cLogLevels = env->GetStringUTFChars(jLogLevels, 0);
+    setLogLevels(cLogLevels);
+    env->ReleaseStringUTFChars(jLogLevels, cLogLevels);
+}

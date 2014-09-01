@@ -6,6 +6,7 @@
 
 %{
 #include "fsk.h"
+#include "digitizer.h"
 #include "rs232.h"
 #include "stackmat.h"
 #include "logging.h"
@@ -65,5 +66,6 @@ class LOG_HANDLE(object):
 %template(intReceiver_stackmatstateSender) fskube::Sender<int, fskube::StackmatState>;
 
 %include "fsk.h"
+%include "digitizer.h"
 %include "rs232.h"
 %include "stackmat.h"
