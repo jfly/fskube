@@ -23,7 +23,7 @@ void Digitizer::setBitsPerSecond(unsigned int bitsPerSecond) {
 }
 
 void Digitizer::maybeSendCurrentBit() {
-    // TODO - <<< comment
+    // Only fire a bit if we've seen a significant (ie: >= 1/2) of a bit.
     if(samplesSeen >= samplesPerBit() / 2) {
         LOG2("after %d samples, sending %d", samplesSeen, currentBit);
         send(currentBit);
