@@ -11,3 +11,6 @@
 # Ignoring byproducts of ndk
 fskube-android-demo/src/main/libs
 fskube-android-demo/src/main/obj
+
+# emacs
+*~
