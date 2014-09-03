@@ -1,36 +1,33 @@
 package com.jflei.fskube.winston;
 
-import android.support.v7.app.ActionBarActivity;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 
+import com.jflei.fskube.winston.activity.InspectionActivity;
 
-public class LaunchActivity extends ActionBarActivity {
+/**
+ * this will be a launcher for everything until we figure out what the flow is going to be
+ */
+public class LaunchActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.launch_activity);
+        setContentView(R.layout.launch_activity); // TODO change this to a listview
+
+        TextView inspectionLauncher = (TextView) findViewById(R.id.inspection_launcher);
+        inspectionLauncher.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Context context = view.getContext();
+                Intent intent = new Intent(context, InspectionActivity.class);
+                context.startActivity(intent);
+            }
+        });
     }
 
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.launch, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
 }

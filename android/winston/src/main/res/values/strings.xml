@@ -2,7 +2,8 @@
 <resources>
 
     <string name="app_name">CompetitionTool</string>
-    <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
+    <string name="inspection_launcher">inspection</string>
+    <string name="inspection_start_message">tap to begin inspection</string>
+    <string name="inspection_end_message">DNF the competitor\'s ass</string>
 
 </resources>
