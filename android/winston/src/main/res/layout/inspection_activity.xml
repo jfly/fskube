@@ -22,14 +22,4 @@
         android:visibility="gone"
         android:textAppearance="@style/InspectionDisplayTextStyle"/>
 
-    <TextView
-        android:id="@+id/inspection_dnf_message"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:visibility="gone"
-        android:background="@color/dark_red"
-        android:textAppearance="@style/InspectionDisplayTextStyle"
-        android:text="@string/inspection_dnf_message"/>
-
 </FrameLayout>

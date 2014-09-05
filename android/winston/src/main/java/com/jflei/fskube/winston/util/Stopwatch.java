@@ -1,9 +1,5 @@
 package com.jflei.fskube.winston.util;
 
-/**
- * Created by pzl on 9/3/14.
-*/
-
 public class Stopwatch {
 
     public enum TimerState {
@@ -41,8 +37,7 @@ public class Stopwatch {
         long elapsed;
         if (mIsRunning) {
             elapsed = (System.currentTimeMillis() - mStartTime);
-        }
-        else {
+        } else {
             elapsed = (mStopTime - mStartTime);
         }
         return elapsed;

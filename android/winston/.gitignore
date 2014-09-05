@@ -1,13 +1,1 @@
-.gradle
-/local.properties
-/.idea
-.DS_Store
 /build
-
-# There seems to be some debate about if iml files should be committed. I
-# figure we can always add them in if we need them.
-*.iml
-
-# Ignoring byproducts of ndk
-fskube-android-demo/src/main/libs
-fskube-android-demo/src/main/obj

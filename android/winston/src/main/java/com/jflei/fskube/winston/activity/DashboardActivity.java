@@ -21,7 +21,9 @@ public class DashboardActivity extends Activity {
     private static final String TAG = "DashboardActivity";
 
     // I could move these to arrays.xml, but this is temporary anyway. Also, I don't care
+    private static final String PACKAGE_NAME_PREFIX = "com.jflei.fskube.winston.activity.";
     private static final String[] DASHBOARD_ITEMS = {"Inspection Tool"};
+    private static final String[] DASHBOARD_ACTIVITIES = {"InspectionActivity"};
 
     private ListView mListView;
     private ListAdapter mListAdapter;
@@ -38,15 +40,18 @@ public class DashboardActivity extends Activity {
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                switch(position) {
-                    case 0:
-                        Context context = view.getContext();
-                        Intent intent = new Intent(context, InspectionActivity.class);
+                if (position > DASHBOARD_ITEMS.length || position > DASHBOARD_ACTIVITIES.length) {
+                    Log.e(TAG, "Not enough items in dashboard array; position " + position);
+                } else {
+                    Context context = view.getContext();
+                    String className = PACKAGE_NAME_PREFIX + DASHBOARD_ACTIVITIES[position];
+                    Intent intent = null;
+                    try {
+                        intent = new Intent(context, Class.forName(className));
                         context.startActivity(intent);
-                        break;
-                    default:
-                        Log.e(TAG, "onItemClick called on position " + position + "; unavailable");
-                        break;
+                    } catch (ClassNotFoundException e) {
+                        Log.e(TAG, "Class not found for name " + className);
+                    }
                 }
             }
         });
