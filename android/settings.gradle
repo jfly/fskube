@@ -1,1 +1,1 @@
-include ':fskube-android', ':fskube-android-demo', ':fskube-android-demo', ':winston'
+include ':fskube-android', ':fskube-android-demo'
