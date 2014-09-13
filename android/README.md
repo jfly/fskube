@@ -22,6 +22,7 @@
    - https://raw.githubusercontent.com/blundell/release-android-library/master/android-release-aar.gradle
 
 ## Releasing
-- `./gradlew uploadArchives`
-   - Go to https://bintray.com/jfly/maven/fskube/ to publish unpublished artifacts
+    - Bump version number in  `fskube-android/build.gradle`.
+    - `./gradlew uploadArchives`
+    - Go to https://bintray.com/jfly/maven/fskube/ to publish unpublished artifacts
 
