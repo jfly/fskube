@@ -10,7 +10,7 @@ A software modem with a web audio api demo.
 
 * `make serve` starts up a local server
 
-== TODO
+## TODO
 
 * Move off gh-pages branch
 * Add android to travis-ci
