@@ -25,4 +25,3 @@
     - Bump version number in  `fskube-android/build.gradle`.
     - `./gradlew uploadArchives`
     - Go to https://bintray.com/jfly/maven/fskube/ to publish unpublished artifacts
-

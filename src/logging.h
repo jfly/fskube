@@ -41,7 +41,7 @@ inline bool isLogLevelEnabled(LogHandle *lh, int level) {
 #define LOG(level, format, ...) \
 do { \
     if(isLogLevelEnabled(logHandle, level)) { \
-        fprintf(stderr, "%s/%d " format "\n", logHandle->name, level, ##__VA_ARGS__); \
+        fprintf(stderr, "%s/%d %s " format "\n", logHandle->name, level, __PRETTY_FUNCTION__, ##__VA_ARGS__); \
     } \
 } while(0);
 

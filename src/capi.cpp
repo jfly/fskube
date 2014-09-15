@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "fsk.h"
 #include "digitizer.h"
@@ -12,21 +13,56 @@ LOG_HANDLE("capi")
 
 using namespace fskube;
 
+// Copied from http://www.guyrutenberg.com/2007/09/22/profiling-code-using-clock_gettime/
+timespec diff(timespec start, timespec end)
+{
+    timespec temp;
+    if ((end.tv_nsec-start.tv_nsec)<0) {
+        temp.tv_sec = end.tv_sec-start.tv_sec-1;
+        temp.tv_nsec = 1000000000+end.tv_nsec-start.tv_nsec;
+    } else {
+        temp.tv_sec = end.tv_sec-start.tv_sec;
+        temp.tv_nsec = end.tv_nsec-start.tv_nsec;
+    }
+    return temp;
+}
+
+#define NANOSECS_PER_MILLISEC 1000000
+#define MILLISECS_PER_SEC 1000
+
 class StackmatStateReceiver : public Receiver<StackmatState> {
+
+    private:
+        StackmatState state;
+        timespec timeLastStateWasReceived;
+        bool isRunning;
 
     public:
         bool receivedSomething;
-        StackmatState state;
 
         StackmatStateReceiver() {
             receivedSomething = false;
         }
 
         void receive(StackmatState state) {
+            LOG2("StackmatStateReceiver::receive() state.millis: %d", state.millis);
+            clock_gettime(CLOCK_MONOTONIC, &timeLastStateWasReceived);
+            isRunning = ( state.millis > this->state.millis );
             receivedSomething = true;
             this->state = state;
         }
 
+        StackmatState getState() {
+	    StackmatState fakeState = state;
+            if(isRunning) {
+                timespec now;
+                clock_gettime(CLOCK_MONOTONIC, &now);
+                timespec delta = diff(timeLastStateWasReceived, now);
+                fakeState.millis += MILLISECS_PER_SEC * delta.tv_sec;
+                fakeState.millis += delta.tv_nsec / NANOSECS_PER_MILLISEC;
+            }
+            return fakeState;
+	}
 };
 
 static Demodulator demodulator;
@@ -86,7 +122,7 @@ bool fskube_addSample(double sample) {
         // Only notify once about going idle, rather than repeatedly.
         if(samplesWithoutData == samplesUntilOff) {
             LOG1("seen %d samples without data, assuming stackmat is off or unlugged", samplesUntilOff);
-            stackmatStateReceiver.state = StackmatState();
+            stackmatStateReceiver.receive(StackmatState());
             return true;
         }
         return false;
@@ -95,5 +131,5 @@ bool fskube_addSample(double sample) {
 
 StackmatState fskube_getState() {
     assert(initialized);
-    return stackmatStateReceiver.state;
+    return stackmatStateReceiver.getState();
 }

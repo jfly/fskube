@@ -10,6 +10,7 @@
 #include "rs232.h"
 #include "stackmat.h"
 #include "logging.h"
+#include "capi.h"
 %}
 
 %include "receiversender.h"
@@ -69,3 +70,4 @@ class LOG_HANDLE(object):
 %include "digitizer.h"
 %include "rs232.h"
 %include "stackmat.h"
+%include "capi.h"
