@@ -49,7 +49,7 @@ $(BLD)/%.cpp: $(SRC)/%.cpp
 .PRECIOUS: $(BLD)/%.cpp
 
 $(BLD)/%.o: $(BLD)/%.cpp
-	$(CXX) -c -fPIC $(CFLAGS) $(INC) $(PYTHON_INC) $< -o $@
+	$(CXX) -c -fPIC $(CFLAGS) $(INC) $(PYTHON_INC) -lrt $< -o $@
 	$(CXX) -MM -MT $(BLD)/$*.o $(CFLAGS) $(INC) $(PYTHON_INC) $< > $(BLD)/$*.d
 
 $(BLD)/fskube.py $(BLD)/fskube_wrap.cpp $(BLD)/fskube_wrap.h: $(FSKUBE_SRCS) $(SRC)/fskube.i
