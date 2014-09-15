@@ -30,7 +30,7 @@ js: $(BLD)/fskube.js
 -include $(PYTHONWRAPPER_OBJS:.o=.d)
 
 $(BLD)/_fskube.so: $(PYTHONWRAPPER_OBJS)
-	$(CXX) -shared $^ -o $@
+	$(CXX) -shared -lrt $^ -o $@
 
 $(RELEASE)/fskube.js: $(BLD)/fskube.js
 	cp $^ $@
@@ -49,7 +49,7 @@ $(BLD)/%.cpp: $(SRC)/%.cpp
 .PRECIOUS: $(BLD)/%.cpp
 
 $(BLD)/%.o: $(BLD)/%.cpp
-	$(CXX) -c -fPIC $(CFLAGS) $(INC) $(PYTHON_INC) -lrt $< -o $@
+	$(CXX) -c -fPIC $(CFLAGS) $(INC) $(PYTHON_INC) $< -o $@
 	$(CXX) -MM -MT $(BLD)/$*.o $(CFLAGS) $(INC) $(PYTHON_INC) $< > $(BLD)/$*.d
 
 $(BLD)/fskube.py $(BLD)/fskube_wrap.cpp $(BLD)/fskube_wrap.h: $(FSKUBE_SRCS) $(SRC)/fskube.i
