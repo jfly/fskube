@@ -3,7 +3,7 @@ SRC := src
 RELEASE := release
 CXX := clang++
 CFLAGS := -Wall -std=c++11 -Wno-c++11-narrowing 
-PYTHON_INC := -I/usr/include/python3.3m -I/usr/include/python3.2
+PYTHON_INC := -I/usr/include/python3.4m -I/usr/include/python3.3m -I/usr/include/python3.2
 INC := -I$(SRC)
 
 FSKUBE_SRCS := $(BLD)/fsk.cpp $(BLD)/rs232.cpp $(BLD)/stackmat.cpp $(BLD)/logging.cpp $(BLD)/capi.cpp $(BLD)/digitizer.cpp
