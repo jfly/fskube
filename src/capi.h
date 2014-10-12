@@ -13,6 +13,8 @@ bool fskube_addSample(double sample);
 
 fskube::StackmatState fskube_getState();
 
+bool fskube_isRunning();
+
 }
 
 #endif // CAPI_H

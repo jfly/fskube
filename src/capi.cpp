@@ -35,10 +35,10 @@ class StackmatStateReceiver : public Receiver<StackmatState> {
     private:
         StackmatState state;
         timespec timeLastStateWasReceived;
-        bool isRunning;
 
     public:
         bool receivedSomething;
+        bool isRunning;
 
         StackmatStateReceiver() {
             receivedSomething = false;
@@ -136,4 +136,9 @@ bool fskube_addSample(double sample) {
 StackmatState fskube_getState() {
     assert(initialized);
     return stackmatStateReceiver.getState();
+}
+
+bool fskube_isRunning() {
+    assert(initialized);
+    return stackmatStateReceiver.isRunning;
 }

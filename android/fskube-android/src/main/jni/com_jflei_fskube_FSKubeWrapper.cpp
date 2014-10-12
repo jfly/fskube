@@ -17,6 +17,16 @@ JNIEXPORT jint JNICALL Java_com_jflei_fskube_FSKubeWrapper_getTimeMillis
     return fskube_getState().millis;
 }
 
+JNIEXPORT jboolean JNICALL Java_com_jflei_fskube_FSKubeWrapper_isOn
+  (JNIEnv *env, jclass clz) {
+    return fskube_getState().on;
+}
+
+JNIEXPORT jboolean JNICALL Java_com_jflei_fskube_FSKubeWrapper_isRunning
+  (JNIEnv *env, jclass clz) {
+    return fskube_isRunning();
+}
+
 JNIEXPORT jstring JNICALL Java_com_jflei_fskube_FSKubeWrapper_getLogLevels
   (JNIEnv *env, jclass clz) {
     return env->NewStringUTF(getLogLevels());
