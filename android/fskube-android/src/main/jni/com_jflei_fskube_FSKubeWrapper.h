@@ -31,6 +31,12 @@ JNIEXPORT jboolean JNICALL Java_com_jflei_fskube_FSKubeWrapper_addSample
 JNIEXPORT jint JNICALL Java_com_jflei_fskube_FSKubeWrapper_getTimeMillis
   (JNIEnv *, jclass);
 
+JNIEXPORT jboolean JNICALL Java_com_jflei_fskube_FSKubeWrapper_isOn
+  (JNIEnv *env, jclass clz);
+
+JNIEXPORT jboolean JNICALL Java_com_jflei_fskube_FSKubeWrapper_isRunning
+  (JNIEnv *env, jclass clz);
+
 /*
  * Class:     com_jflei_fskube_FSKubeWrapper
  * Method:    getLogLevels
