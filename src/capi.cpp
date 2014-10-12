@@ -45,7 +45,11 @@ class StackmatStateReceiver : public Receiver<StackmatState> {
         }
 
         void receive(StackmatState state) {
-            LOG2("StackmatStateReceiver::receive() state.millis: %d", state.millis);
+            bool validChecksum = state.checksum != state.computedChecksum();
+            LOG2("StackmatStateReceiver::receive() state.millis: %d validChecksum: %d", state.millis, validChecksum);
+            if(!validChecksum) {
+                return;
+            }
             clock_gettime(CLOCK_MONOTONIC, &timeLastStateWasReceived);
             isRunning = ( state.millis > this->state.millis );
             receivedSomething = true;
@@ -53,7 +57,7 @@ class StackmatStateReceiver : public Receiver<StackmatState> {
         }
 
         StackmatState getState() {
-	    StackmatState fakeState = state;
+            StackmatState fakeState = state;
             if(isRunning) {
                 timespec now;
                 clock_gettime(CLOCK_MONOTONIC, &now);

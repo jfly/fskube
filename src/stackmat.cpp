@@ -116,11 +116,7 @@ void StackmatInterpreter::receive(int byte) {
                 state.millis += hundredthsDigit * MILLIS_PER_CENTISECOND;
                 state.millis += thousandthsDigit;
 
-                unsigned char computedChecksum = 64 + minuteDigit + tensSecondsDigit +
-                    onesSecondsDigit + tenthsDigit + hundredthsDigit +
-                    thousandthsDigit;
                 state.checksum = checksum;
-                state.computedChecksum = computedChecksum;
                 state.lf = lf;
                 state.cr = cr;
 

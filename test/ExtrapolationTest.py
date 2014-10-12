@@ -42,6 +42,7 @@ class ExtrapolationTest(FskTest.FskTest):
         sleepSecs = 1
         time.sleep(sleepSecs)
         currentSignalMillis = fskube.fskube_getState().millis
+        import pdb; pdb.set_trace()#<<<
         self.assertGreaterEqual(currentSignalMillis, lastSignalMillis + sleepSecs*1000)
 
 if __name__ == "__main__":

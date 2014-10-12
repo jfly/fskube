@@ -12,15 +12,46 @@ namespace fskube {
 #define GEN3SIGNAL_BYTES 10
 #define LARGESTSIGNAL_BYTES GEN3SIGNAL_BYTES
 
+#define MILLIS_PER_MINUTE (60*1000)
+#define MILLIS_PER_SECOND (1000)
+#define MILLIS_PER_DECISECOND (100)
+#define MILLIS_PER_CENTISECOND (10)
+
 struct StackmatState {
     bool on;
     unsigned char checksum;
-    unsigned char computedChecksum;
     unsigned char lf;
     unsigned char cr;
     unsigned int millis;
     unsigned int generation;
     unsigned char commandByte;
+
+    unsigned int minuteDigit() {
+        int minutes_digit = millis / MILLIS_PER_MINUTE;
+        return minutes_digit;
+    }
+    unsigned int tensSecondsDigit() {
+        int seconds = millis / MILLIS_PER_SECOND;
+        return seconds / 10;
+    }
+    unsigned int onesSecondsDigit() {
+        int seconds = millis / MILLIS_PER_SECOND;
+        return seconds % 10;
+    }
+    unsigned int tenthsDigit() {
+        return ( millis % MILLIS_PER_SECOND ) / MILLIS_PER_DECISECOND;
+    }
+    unsigned int hundredthsDigit() {
+        return ( millis % MILLIS_PER_SECOND ) % MILLIS_PER_DECISECOND;
+    }
+    unsigned int thousandthsDigit() {
+        return millis % 1000;
+    }
+    unsigned char computedChecksum() {
+        return 64 + minuteDigit() + tensSecondsDigit() +
+            onesSecondsDigit() + tenthsDigit() + hundredthsDigit() +
+            thousandthsDigit();
+    }
     bool operator==(StackmatState& o) const {
         return millis == o.millis && generation == o.generation && commandByte == o.commandByte;
     }
