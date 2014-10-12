@@ -45,8 +45,8 @@ class StackmatStateReceiver : public Receiver<StackmatState> {
         }
 
         void receive(StackmatState state) {
-            bool validChecksum = state.checksum != state.computedChecksum();
-            LOG2("StackmatStateReceiver::receive() state.millis: %d validChecksum: %d", state.millis, validChecksum);
+            bool validChecksum = state.checksum == state.computedChecksum();
+            LOG2("StackmatStateReceiver::receive() state.millis: %d checksum: %d computedChecksum: %d", state.millis, state.checksum, state.computedChecksum());
             if(!validChecksum) {
                 return;
             }

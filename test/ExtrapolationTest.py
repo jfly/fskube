@@ -30,8 +30,10 @@ class ExtrapolationTest(FskTest.FskTest):
         # We only extrapolate the signal when we think that the timer is running.
         state = fskube.StackmatState()
         state.millis = 40
+        state.checksum = state.computedChecksum()
         stackmatSythesizer.receive(state)
         state.millis = 500
+        state.checksum = state.computedChecksum()
         stackmatSythesizer.receive(state)
         for sample in sampler.data:
             fskube.fskube_addSample(sample)
@@ -42,7 +44,6 @@ class ExtrapolationTest(FskTest.FskTest):
         sleepSecs = 1
         time.sleep(sleepSecs)
         currentSignalMillis = fskube.fskube_getState().millis
-        import pdb; pdb.set_trace()#<<<
         self.assertGreaterEqual(currentSignalMillis, lastSignalMillis + sleepSecs*1000)
 
 if __name__ == "__main__":

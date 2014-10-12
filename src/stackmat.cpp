@@ -8,54 +8,28 @@ LOG_HANDLE("stackmat")
 
 StackmatSynthesizer::StackmatSynthesizer() {}
 
-#define MILLIS_PER_MINUTE (60*1000)
-#define MILLIS_PER_SECOND (1000)
-#define MILLIS_PER_DECISECOND (100)
-#define MILLIS_PER_CENTISECOND (10)
-
 void StackmatSynthesizer::receive(StackmatState state) {
+    LOG2("state.millis: %d state.checksum: %d", state.millis, state.checksum);
     send(state.commandByte);
 
-    int checksum = 64;
-    int millis = state.millis;
-
     // minutes
-    int minutes_digit = millis / MILLIS_PER_MINUTE;
-    millis %= MILLIS_PER_MINUTE;
-    checksum += minutes_digit;
-    send('0' + minutes_digit);
+    send('0' + state.minutesDigit());
     
     // seconds
-    int seconds = millis / MILLIS_PER_SECOND;
-    millis %= MILLIS_PER_SECOND;
-
-    int dekaseconds_digit = seconds / 10;
-    checksum += dekaseconds_digit;
-    send('0' + dekaseconds_digit);
-
-    int seconds_digit = seconds % 10;
-    checksum += seconds_digit;
-    send('0' + seconds_digit);
+    send('0' + state.tensSecondsDigit());
+    send('0' + state.onesSecondsDigit());
 
     // decimal
-    int deciseconds_digit = millis / MILLIS_PER_DECISECOND;
-    millis = millis % MILLIS_PER_DECISECOND;
-    checksum += deciseconds_digit;
-    send('0' + deciseconds_digit);
+    send('0' + state.tenthsDigit());
 
-    int centiseconds_digit = millis / MILLIS_PER_CENTISECOND;
-    millis = millis % MILLIS_PER_CENTISECOND;
-    checksum += centiseconds_digit;
-    send('0' + centiseconds_digit);
+    send('0' + state.hundredthsDigit());
 
     if(state.generation == 3) {
-        int milliseconds_digit = millis;
-        checksum += milliseconds_digit;
-        send('0' + milliseconds_digit);
+        send('0' + state.thousandthsDigit());
     }
 
     // checksum
-    send(checksum);
+    send(state.checksum);
 
     // LF
     send('\n');
@@ -76,7 +50,7 @@ void StackmatInterpreter::reset() {
 }
 
 void StackmatInterpreter::receive(int byte) {
-    LOG2("StackmatInterpreter::receive(%d)", byte);
+    LOG2("byte: %d", byte);
     if(byte < 0) {
         // idle received, parse collected characters
         switch(receivedBytesLength) {
@@ -93,7 +67,7 @@ void StackmatInterpreter::receive(int byte) {
                 int i = 0;
                 state.commandByte = receivedBytes[i++];
 
-                int minuteDigit = (receivedBytes[i++] - '0');
+                int minutesDigit = (receivedBytes[i++] - '0');
                 int tensSecondsDigit = (receivedBytes[i++] - '0');
                 int onesSecondsDigit = (receivedBytes[i++] - '0');
                 int tenthsDigit = (receivedBytes[i++] - '0');
@@ -109,7 +83,7 @@ void StackmatInterpreter::receive(int byte) {
                 unsigned char cr = receivedBytes[i++];
 
                 state.millis = 0;
-                state.millis += minuteDigit * MILLIS_PER_MINUTE;
+                state.millis += minutesDigit * MILLIS_PER_MINUTE;
                 int seconds = 10 * tensSecondsDigit + onesSecondsDigit;
                 state.millis += seconds * MILLIS_PER_SECOND;
                 state.millis += tenthsDigit * MILLIS_PER_DECISECOND;
